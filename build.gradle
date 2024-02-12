@@ -23,6 +23,8 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.jetbrains:annotations:24.0.0'
+    implementation 'org.jetbrains:annotations:24.0.0'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
@@ -53,6 +55,9 @@ dependencies {
 
     // iterator util
     implementation 'org.apache.commons:commons-collections4:jar:4.1'
+
+    // rabbitmq_mqtt
+    implementation "org.springframework.integration:spring-integration-mqtt:6.2.1"
 }
 
 tasks.named('test') {

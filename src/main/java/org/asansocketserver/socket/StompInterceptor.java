@@ -7,6 +7,7 @@ import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.reponsitory.WatchLiveRepository;
 import org.asansocketserver.domain.watch.reponsitory.WatchRepository;
+import org.asansocketserver.domain.watch.service.WatchIdService;
 import org.asansocketserver.socket.dto.MessageType;
 import org.asansocketserver.socket.dto.SocketBaseResponse;
 import org.asansocketserver.socket.error.SocketException;
@@ -34,7 +35,7 @@ public class StompInterceptor implements ChannelInterceptor {
     private final WatchRepository watchRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SimpMessageSendingOperations sendingOperations;
-
+    private final WatchIdService watchIdService;
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
@@ -44,6 +45,7 @@ public class StompInterceptor implements ChannelInterceptor {
             if (!watchId.equals(monitoringId)) {
                 setWatchIdFromStompHeader(accessor, watchId);
                 createWatchLiveAndSave(watchId);
+                watchIdService.removeWatchId(String.valueOf(watchId));
             }
             log.info("[CONNECT]:: watchId : " + watchId);
         } else if (StompCommand.SUBSCRIBE.equals(command)) {
@@ -53,6 +55,7 @@ public class StompInterceptor implements ChannelInterceptor {
             if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
                 deleteWatchIdFromStompHeader(accessor);
                 deleteWatchInRedis(watchId);
+                watchIdService.addDisconnectedWatchId(String.valueOf(watchId));
             }
             log.info("DISCONNECTED watchId : {}", watchId);
         }
