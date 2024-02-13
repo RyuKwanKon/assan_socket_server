@@ -2,16 +2,12 @@ package org.asansocketserver.domain.position.controller;
 
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.position.dto.PosDataDTO;
 import org.asansocketserver.domain.position.dto.PositionDTO;
-import org.asansocketserver.domain.position.dto.StateDTO;
+import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.service.PositionService;
 import org.asansocketserver.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/location")

@@ -1,7 +1,7 @@
 package org.asansocketserver.domain.position.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.position.dto.PosDataDTO;
+import org.asansocketserver.domain.position.dto.request.PosDataDTO;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
 import org.asansocketserver.domain.position.service.PositionService;
 import org.asansocketserver.socket.dto.MessageType;
@@ -17,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RestController
 public class PositionMessageController {
-    private PositionService positionService;
+    private final PositionService positionService;
     private final SimpMessageSendingOperations sendingOperations;
 
     @MessageMapping("/position")

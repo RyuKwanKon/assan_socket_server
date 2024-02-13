@@ -3,16 +3,20 @@ package org.asansocketserver.domain.position.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.position.dto.BeaconDataDTO;
-import org.asansocketserver.domain.position.dto.PosDataDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.position.dto.ResultDataDTO;
-import org.asansocketserver.domain.position.dto.StateDTO;
+import org.asansocketserver.domain.position.dto.request.BeaconDataDTO;
+import org.asansocketserver.domain.position.dto.request.PosDataDTO;
+import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
 import org.asansocketserver.domain.position.entity.BeaconData;
 import org.asansocketserver.domain.position.entity.PositionState;
 import org.asansocketserver.domain.position.repository.BeaconDataRepository;
 import org.asansocketserver.domain.position.repository.PositionStateRepository;
 import org.asansocketserver.domain.position.util.BeaconDataUtil;
+import org.asansocketserver.domain.watch.entity.Watch;
+import org.asansocketserver.domain.watch.repository.WatchRepository;
+import org.asansocketserver.global.error.exception.EntityNotFoundException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -21,28 +25,34 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class PositionService {
     private final BeaconDataRepository beaconDataRepository;
+    private final WatchRepository watchRepository;
     private final ThreadPoolTaskExecutor taskExecutor;
     private final BeaconDataUtil beaconDataUtil;
     private final PositionStateRepository positionStateRepository;
 
     public void insertState(StateDTO stateDTO) {
+        Watch watch = findByWatchOrThrow(stateDTO.androidId());
         PositionState positionState =
-                PositionState.createPositionState(stateDTO.getAndroid_id(), stateDTO.getPosition());
+                PositionState.createPositionState(watch.getId(), stateDTO.position());
         positionStateRepository.save(positionState);
     }
 
     public void deleteState(StateDTO stateDTO) {
-        positionStateRepository.deleteById(stateDTO.getAndroid_id());
+        Watch watch = findByWatchOrThrow(stateDTO.androidId());
+        positionStateRepository.deleteById(watch.getId());
     }
 
     public PositionResponseDto receiveData(PosDataDTO posData) {
         String responseDto;
-        PositionState positionState = findByPositionStateOrNull(posData.getAndroid_id());
+        Watch watch = findByWatchOrThrow(posData.android_id());
+        PositionState positionState = findByPositionStateOrNull(watch.getId());
         if (!Objects.isNull(positionState))
             responseDto = addPosData(posData, positionState.getPosition());
         else
@@ -63,7 +73,7 @@ public class PositionService {
     private String addPosData(PosDataDTO posData, String position) {
         BeaconData beaconDataEntity = new BeaconData();
         beaconDataEntity.setPosition(position);
-        String beaconDataJson = converBeaconDataDtoToJson(posData.getBeaconData());
+        String beaconDataJson = converBeaconDataDtoToJson(posData.beaconData());
         beaconDataEntity.setBeaconData(beaconDataJson);
         beaconDataRepository.save(beaconDataEntity);
         return null;
@@ -122,11 +132,11 @@ public class PositionService {
             int sum = 0;
 
             for (BeaconDataDTO dbBeaconData : dbBeaconDataList) {
-                for (BeaconDataDTO inputBeaconData : inputData.getBeaconData()) {
-                    if (dbBeaconData.getBssid().equals(inputBeaconData.getBssid())) {
+                for (BeaconDataDTO inputBeaconData : inputData.beaconData()) {
+                    if (dbBeaconData.bssid().equals(inputBeaconData.bssid())) {
 
                         count++;
-                        sum += Math.abs(dbBeaconData.getRssi() - inputBeaconData.getRssi());
+                        sum += Math.abs(dbBeaconData.rssi() - inputBeaconData.rssi());
                         break;
                     }
                 }
@@ -183,12 +193,17 @@ public class PositionService {
         if (bestPosition != null) {
             for (ResultDataDTO result : nearestNeighbors) {
                 if (result.getPosition().equals(bestPosition)) {
-                    System.out.println("resultHashMap = " + result.getPosition());
+                    log.info("[resultHashMap]::" + result.getPosition());
                     return result.getPosition();
                 }
             }
         }
         return null;
+    }
+
+    private Watch findByWatchOrThrow(String uuid) {
+        return watchRepository.findByUuid(uuid)
+                .orElseThrow(() -> new EntityNotFoundException(WATCH_UUID_NOT_FOUND));
     }
 }
 

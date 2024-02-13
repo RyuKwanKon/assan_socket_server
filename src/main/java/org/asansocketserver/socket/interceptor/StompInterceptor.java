@@ -32,8 +32,10 @@ public class StompInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
+        System.out.println(command);
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
+            System.out.println(watchId);
             if (!watchId.equals(monitoringId)) {
                 setWatchIdFromStompHeader(accessor, watchId);
                 createWatchLiveAndSave(watchId);

@@ -3,7 +3,7 @@ package org.asansocketserver.domain.position.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.asansocketserver.domain.position.dto.BeaconDataDTO;
+import org.asansocketserver.domain.position.dto.request.BeaconDataDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
