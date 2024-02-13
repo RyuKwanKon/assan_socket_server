@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.sensor.entity.Sensor;
 import org.asansocketserver.domain.sensor.mongorepository.SensorRepository;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
+import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.Watch;
@@ -16,8 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.asansocketserver.global.error.ErrorCode.DUPLICATE_WATCH_UUID;
-import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
+import static org.asansocketserver.global.error.ErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,6 +26,11 @@ import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 public class WatchService {
     private final WatchRepository watchRepository;
     private final SensorRepository sensorRepository;
+
+    public void updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
+        Watch watch = findByWatchIdOrThrow(watchId);
+        watch.updateWatch(watchUpdateRequestDto);
+    }
 
     public WatchAllResponseDto findAllWatch() {
         List<Watch> watchList = findAllByWatch();
@@ -58,6 +63,11 @@ public class WatchService {
     private void validateDuplicateWatch(WatchRequestDto watchRequestDto) {
         if (watchRepository.existsByUuid(watchRequestDto.uuid()))
             throw new ConflictException(DUPLICATE_WATCH_UUID);
+    }
+
+    private Watch findByWatchIdOrThrow(Long id) {
+        return watchRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(WATCH_NOT_FOUND));
     }
 
     private Watch findByWatchOrThrow(String uuid) {

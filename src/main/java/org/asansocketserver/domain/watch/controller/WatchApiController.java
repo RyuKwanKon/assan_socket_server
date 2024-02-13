@@ -37,6 +37,7 @@ public class WatchApiController {
     @PostMapping("/{id}")
     public ResponseEntity<SuccessResponse<?>> updateWatchInfo(@PathVariable("id") final Long id,
                                                               @RequestBody final WatchUpdateRequestDto requestDto) {
+        watchService.updateWatchInfo(id, requestDto);
         return SuccessResponse.created(null);
     }
 }

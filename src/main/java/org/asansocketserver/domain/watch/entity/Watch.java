@@ -2,6 +2,7 @@ package org.asansocketserver.domain.watch.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -24,5 +25,10 @@ public class Watch {
                 .name("지정되지않음")
                 .host("지정되지않음")
                 .build();
+    }
+
+    public void updateWatch(WatchUpdateRequestDto requestDto) {
+        this.name = requestDto.name();
+        this.host = requestDto.host();
     }
 }

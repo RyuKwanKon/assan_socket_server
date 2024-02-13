@@ -35,6 +35,7 @@ public enum ErrorCode {
      * 404 Not Found
      */
     ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "엔티티를 찾을 수 없습니다."),
+    WATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "등록되지 않은 워치입니다."),
     WATCH_UUID_NOT_FOUND(HttpStatus.NOT_FOUND, "등록되지 않은 워치입니다."),
 
     /**
