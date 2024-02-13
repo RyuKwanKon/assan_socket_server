@@ -15,10 +15,14 @@ public class Watch {
     @Column(name = "watch_id")
     private Long id;
     private String uuid;
+    private String name;
+    private String host;
 
     public static Watch createWatch(String uuid) {
         return Watch.builder()
                 .uuid(uuid)
+                .name("지정되지않음")
+                .host("지정되지않음")
                 .build();
     }
 }

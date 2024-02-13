@@ -2,6 +2,7 @@ package org.asansocketserver.domain.watch.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
+import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.service.WatchService;
@@ -28,8 +29,14 @@ public class WatchApiController {
     }
 
     @PostMapping
-    public ResponseEntity<SuccessResponse<?>> createWatch(@RequestBody final WatchRequestDto watchRequestDto) {
-        final WatchResponseDto responseDto = watchService.createWatch(watchRequestDto);
+    public ResponseEntity<SuccessResponse<?>> createWatch(@RequestBody final WatchRequestDto requestDto) {
+        final WatchResponseDto responseDto = watchService.createWatch(requestDto);
         return SuccessResponse.created(responseDto);
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<SuccessResponse<?>> updateWatchInfo(@PathVariable("id") final Long id,
+                                                              @RequestBody final WatchUpdateRequestDto requestDto) {
+        return SuccessResponse.created(null);
     }
 }

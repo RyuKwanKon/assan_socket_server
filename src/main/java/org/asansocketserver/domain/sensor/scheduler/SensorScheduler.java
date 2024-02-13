@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.sensor.entity.Sensor;
 import org.asansocketserver.domain.sensor.mongorepository.SensorRepository;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
+import org.asansocketserver.domain.watch.dto.response.WatchLiveResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
@@ -41,10 +42,9 @@ public class SensorScheduler {
 //        sendingOperations.convertAndSend("/queue/watchList", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
 //    }
 
-    private WatchAllResponseDto findAllWatch() {
+    private List<WatchLiveResponseDto> findAllWatch() {
         List<WatchLive> watchLiveList = findAllWatchInRedis();
-        List<WatchResponseDto> watchResponseDtoList = WatchResponseDto.liveListOf(watchLiveList);
-        return WatchAllResponseDto.of(watchResponseDtoList);
+        return WatchLiveResponseDto.liveListOf(watchLiveList);
     }
 
     private void createSensorAndSave(Long watchId) {

@@ -10,23 +10,21 @@ import java.util.stream.Collectors;
 
 @Builder(access = AccessLevel.PRIVATE)
 public record WatchResponseDto(
-        Long watchId
+        Long watchId,
+        String name,
+        String host
 ) {
-    public static WatchResponseDto of(Long id) {
+    public static WatchResponseDto of(Watch watch) {
         return WatchResponseDto.builder()
-                .watchId(id)
+                .watchId(watch.getId())
+                .name(watch.getName())
+                .host(watch.getHost())
                 .build();
     }
 
     public static List<WatchResponseDto> listOf(List<Watch> watchList) {
         return watchList.stream()
-                .map(watch -> WatchResponseDto.of(watch.getId()))
-                .collect(Collectors.toList());
-    }
-
-    public static List<WatchResponseDto> liveListOf(List<WatchLive> watchLiveList) {
-        return watchLiveList.stream()
-                .map(watchLive -> WatchResponseDto.of(watchLive.getId()))
+                .map(WatchResponseDto::of)
                 .collect(Collectors.toList());
     }
 }

@@ -35,14 +35,14 @@ public class WatchService {
 
     public WatchResponseDto findWatch(String uuid) {
         Watch watch = findByWatchOrThrow(uuid);
-        return WatchResponseDto.of(watch.getId());
+        return WatchResponseDto.of(watch);
     }
 
     public WatchResponseDto createWatch(WatchRequestDto watchRequestDto) {
         validateDuplicateWatch(watchRequestDto);
         Watch createdWatch = createWatchAndSave(watchRequestDto);
         createSensorAndSave(createdWatch);
-        return WatchResponseDto.of(createdWatch.getId());
+        return WatchResponseDto.of(createdWatch);
     }
 
     private void createSensorAndSave(Watch watch) {
