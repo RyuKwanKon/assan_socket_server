@@ -27,9 +27,10 @@ public class WatchService {
     private final WatchRepository watchRepository;
     private final SensorRepository sensorRepository;
 
-    public void updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
+    public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
         watch.updateWatch(watchUpdateRequestDto);
+        return WatchResponseDto.of(watch);
     }
 
     public WatchAllResponseDto findAllWatch() {

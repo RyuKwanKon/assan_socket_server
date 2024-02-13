@@ -12,6 +12,9 @@ import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
+import org.asansocketserver.socket.dto.MessageType;
+import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +32,7 @@ public class SensorScheduler {
     private final WatchRepository watchRepository;
     private final SensorRepository sensorRepository;
     private final WatchLiveRepository watchLiveRepository;
+    private final SimpMessageSendingOperations sendingOperations;
 
     @Transactional
     @Scheduled(cron = "0 0 0 * * *")
@@ -37,10 +41,12 @@ public class SensorScheduler {
         watchList.forEach(watch -> createSensorAndSave(watch.getId()));
     }
 
-//    private void broadcastWatchList() {
-//        WatchAllResponseDto responseDto = findAllWatch();
-//        sendingOperations.convertAndSend("/queue/watchList", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
-//    }
+    @Transactional
+    @Scheduled(cron = "30 * * * * *")
+    public void broadcastWatchList() {
+        List<WatchLiveResponseDto> responseDto = findAllWatch();
+        sendingOperations.convertAndSend("/queue/watchList", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
+    }
 
     private List<WatchLiveResponseDto> findAllWatch() {
         List<WatchLive> watchLiveList = findAllWatchInRedis();
