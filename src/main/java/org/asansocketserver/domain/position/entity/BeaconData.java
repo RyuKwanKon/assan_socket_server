@@ -17,7 +17,4 @@ public class BeaconData {
     private String position;
     @Column(columnDefinition = "json")
     private String beaconData;
-
-
-
 }

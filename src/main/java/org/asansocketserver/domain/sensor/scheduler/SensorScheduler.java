@@ -5,8 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.sensor.entity.Sensor;
 import org.asansocketserver.domain.sensor.mongorepository.SensorRepository;
+import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
+import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.Watch;
-import org.asansocketserver.domain.watch.reponsitory.WatchRepository;
+import org.asansocketserver.domain.watch.entity.WatchLive;
+import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
+import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,6 +27,7 @@ import java.util.List;
 public class SensorScheduler {
     private final WatchRepository watchRepository;
     private final SensorRepository sensorRepository;
+    private final WatchLiveRepository watchLiveRepository;
 
     @Transactional
     @Scheduled(cron = "0 0 0 * * *")
@@ -31,12 +36,26 @@ public class SensorScheduler {
         watchList.forEach(watch -> createSensorAndSave(watch.getId()));
     }
 
+//    private void broadcastWatchList() {
+//        WatchAllResponseDto responseDto = findAllWatch();
+//        sendingOperations.convertAndSend("/queue/watchList", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
+//    }
+
+    private WatchAllResponseDto findAllWatch() {
+        List<WatchLive> watchLiveList = findAllWatchInRedis();
+        List<WatchResponseDto> watchResponseDtoList = WatchResponseDto.liveListOf(watchLiveList);
+        return WatchAllResponseDto.of(watchResponseDtoList);
+    }
+
     private void createSensorAndSave(Long watchId) {
         if (sensorRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
         Sensor sensor = Sensor.createSensor(watchId);
         sensorRepository.save(sensor);
     }
 
+    private List<WatchLive> findAllWatchInRedis() {
+        return watchLiveRepository.findAllByLive(true);
+    }
 
     private List<Watch> findAllByWatch() {
         return watchRepository.findAll();

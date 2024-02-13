@@ -1,7 +1,7 @@
 package org.asansocketserver.socket.config;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.socket.StompInterceptor;
+import org.asansocketserver.socket.interceptor.StompInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -11,8 +11,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 
 @RequiredArgsConstructor
-@EnableWebSocketMessageBroker
 @Configuration
+@EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final StompInterceptor stompInterceptor;
 

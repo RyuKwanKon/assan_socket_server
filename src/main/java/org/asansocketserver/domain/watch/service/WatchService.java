@@ -8,7 +8,7 @@ import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.Watch;
-import org.asansocketserver.domain.watch.reponsitory.WatchRepository;
+import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.ConflictException;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
 import org.springframework.stereotype.Service;

@@ -49,7 +49,7 @@ public class SensorApiController {
                               @Payload final HeartRateRequestDto request) {
         HeartRateResponseDto response = sensorService.sendHeartRate(simpSessionAttributes, request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
-        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.ACCELEROMETER, response));
+        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.HEART_RATE, response));
     }
 
     @MessageMapping("/light")

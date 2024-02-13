@@ -1,4 +1,4 @@
-package org.asansocketserver.domain.watch.reponsitory;
+package org.asansocketserver.domain.watch.repository;
 
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.springframework.data.repository.CrudRepository;

@@ -1,17 +1,15 @@
 package org.asansocketserver.domain.image.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
-@Entity
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@Getter
+@Table(name = "coordinate")
+@Entity
 public class Coordinate {
     @Id
     @GeneratedValue
@@ -20,10 +18,8 @@ public class Coordinate {
     @JoinColumn(name = "image_id")
     private Image imageId;
     private String position;
-
     private float startX;
     private float startY;
     private float endX;
     private float endY;
-
 }

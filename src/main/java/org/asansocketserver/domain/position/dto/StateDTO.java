@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class StateDTO {
-    private String android_id;
+    private Long android_id;
     private String position;
 }

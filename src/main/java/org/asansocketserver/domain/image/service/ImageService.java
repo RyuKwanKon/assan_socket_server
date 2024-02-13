@@ -4,31 +4,29 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.image.dto.CoordinateDTO;
 import org.asansocketserver.domain.image.dto.LabelDataDTO;
-import org.asansocketserver.domain.position.dto.PositionDTO;
 import org.asansocketserver.domain.image.entity.Coordinate;
 import org.asansocketserver.domain.image.entity.Image;
 import org.asansocketserver.domain.image.repository.CoordinateRepository;
 import org.asansocketserver.domain.image.repository.ImageRepository;
+import org.asansocketserver.domain.position.dto.PositionDTO;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
 @RequiredArgsConstructor
+@Transactional
+@Service
 public class ImageService {
-
-    private final ImageRepository imageRepository;
     private final CoordinateRepository coordinateRepository;
+    private final ImageRepository imageRepository;
 
-
-    @Transactional
-    public String getImage(){
+    public String getImage() {
         List<Image> image = imageRepository.findAll();
         return image.get(0).getImageUrl();
     }
 
 
-    @Transactional
     public Long saveImage(String imageUrl) {
         //유저 가져오는 부분까지 해야함.
         Image image = Image.builder().imageUrl(imageUrl).build();
@@ -36,7 +34,7 @@ public class ImageService {
         List<Image> imageAll = imageRepository.findAll();
         int imageCounts = imageAll.size();
 
-        if (imageCounts > 0 )  {
+        if (imageCounts > 0) {
             throw new IllegalArgumentException("이미지가 이미 업로드되어 있습니다. 이전 이미지를 삭제해주세요.");
         }
 
@@ -44,8 +42,6 @@ public class ImageService {
         return saveImage.getId();
     }
 
-
-    @Transactional
     public void deleteImage(Long imageId) {
 
         Image image = (imageRepository.findById(imageId).orElseThrow(() ->
@@ -54,7 +50,6 @@ public class ImageService {
         imageRepository.delete(image);
     }
 
-    @Transactional
     public void saveImagePositionAndCoordinates(LabelDataDTO labelDataDTO) {
 
         Image image = (imageRepository.findById(labelDataDTO.getImageId()).orElseThrow(() ->
@@ -83,7 +78,6 @@ public class ImageService {
     }
 
 
-    @Transactional
     public void deleteImagePositionAndCoordinates(Long coordinateId) {
 
 
@@ -93,15 +87,13 @@ public class ImageService {
         coordinateRepository.delete(coordinate);
     }
 
-    @Transactional
-    public List<CoordinateDTO> getPositionAndCoordinateList(){
+    public List<CoordinateDTO> getPositionAndCoordinateList() {
         List<Coordinate> coordinateList = coordinateRepository.findAll();
         List<CoordinateDTO> coordinateDTOList = new ArrayList<>();
 
         if (coordinateList.isEmpty()) {
             throw new IllegalArgumentException("해당 이미지의 위치 목록이 존재하지 않습니다");
-        }
-        else{
+        } else {
 
             for (Coordinate coordinate : coordinateList) {
                 CoordinateDTO coordinateDTO = new CoordinateDTO();
@@ -121,14 +113,13 @@ public class ImageService {
     }
 
     @Transactional
-    public List<PositionDTO> getPositionList(){
+    public List<PositionDTO> getPositionList() {
         List<Coordinate> coordinateList = coordinateRepository.findAll();
         List<PositionDTO> positionList = new ArrayList<>();
 
         if (coordinateList.isEmpty()) {
             throw new IllegalArgumentException("해당 이미지의 위치 목록이 존재하지 않습니다");
-        }
-        else{
+        } else {
             for (Coordinate coordinate : coordinateList) {
                 PositionDTO positionDTO = new PositionDTO();
                 positionDTO.setImageId(coordinate.getImageId().getId());

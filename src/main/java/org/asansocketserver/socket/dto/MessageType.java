@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public enum MessageType {
+    POSITION("POSITION"),
     WATCH_LIST("WATCH_LIST"),
     HEART_RATE("HEART_RATE"),
     LOCATION("LOCATION"),

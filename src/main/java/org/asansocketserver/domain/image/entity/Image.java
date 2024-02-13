@@ -2,27 +2,24 @@ package org.asansocketserver.domain.image.entity;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
+@Getter
+@Table(name = "image")
+@Entity
 public class Image {
     @Id
     @GeneratedValue
     private Long id;
-
     private String imageUrl;
-
     @OneToMany(mappedBy = "imageId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Coordinate> coordinates = new ArrayList<>();
 }
+
 

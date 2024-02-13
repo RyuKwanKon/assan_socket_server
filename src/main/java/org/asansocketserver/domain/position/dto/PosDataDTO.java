@@ -12,7 +12,7 @@ import java.util.List;
 public class PosDataDTO {
 
     @JsonProperty("android_id")
-    private String android_id;
+    private Long android_id;
 
     @JsonProperty("position")
     private String position;

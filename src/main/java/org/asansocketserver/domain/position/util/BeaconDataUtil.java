@@ -12,11 +12,13 @@ import java.util.List;
 @Component
 public class BeaconDataUtil {
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
     public static List<BeaconDataDTO> parseBeaconData(String BeaconDataJson) {
         try {
             // JSON 문자열이 객체 리스트를 나타내는지 확인
             if (BeaconDataJson.trim().startsWith("[")) {
-                return objectMapper.readValue(BeaconDataJson, new TypeReference<List<BeaconDataDTO>>() {});
+                return objectMapper.readValue(BeaconDataJson, new TypeReference<List<BeaconDataDTO>>() {
+                });
             } else {
                 // JSON 문자열이 단일 객체를 나타내면, 이를 리스트에 추가
                 BeaconDataDTO singleData = objectMapper.readValue(BeaconDataJson, BeaconDataDTO.class);
