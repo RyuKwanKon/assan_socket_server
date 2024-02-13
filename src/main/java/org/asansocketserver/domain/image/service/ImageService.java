@@ -3,6 +3,7 @@ package org.asansocketserver.domain.image.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.image.dto.CoordinateDTO;
+import org.asansocketserver.domain.image.dto.ImageResponseDto;
 import org.asansocketserver.domain.image.dto.LabelDataDTO;
 import org.asansocketserver.domain.image.entity.Coordinate;
 import org.asansocketserver.domain.image.entity.Image;
@@ -21,9 +22,9 @@ public class ImageService {
     private final CoordinateRepository coordinateRepository;
     private final ImageRepository imageRepository;
 
-    public String getImage() {
+    public ImageResponseDto getImage() {
         List<Image> image = imageRepository.findAll();
-        return image.get(0).getImageUrl();
+        return ImageResponseDto.of(image.get(0).getImageUrl());
     }
 
 
