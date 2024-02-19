@@ -16,12 +16,14 @@ public class Watch {
     @Column(name = "watch_id")
     private Long id;
     private String uuid;
+    private String device;
     private String name;
     private String host;
 
-    public static Watch createWatch(String uuid) {
+    public static Watch createWatch(String uuid, String device) {
         return Watch.builder()
                 .uuid(uuid)
+                .device(device)
                 .name("지정되지않음")
                 .host("지정되지않음")
                 .build();

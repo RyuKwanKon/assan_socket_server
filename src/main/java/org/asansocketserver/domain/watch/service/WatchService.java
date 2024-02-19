@@ -57,7 +57,7 @@ public class WatchService {
     }
 
     private Watch createWatchAndSave(WatchRequestDto watchRequestDto) {
-        Watch createdWatch = Watch.createWatch(watchRequestDto.uuid());
+        Watch createdWatch = Watch.createWatch(watchRequestDto.uuid(), watchRequestDto.device());
         return watchRepository.save(createdWatch);
     }
 
