@@ -35,7 +35,7 @@ public class StompInterceptor implements ChannelInterceptor {
         System.out.println(command);
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
-            System.out.println(watchId);
+            System.out.println(!watchId.equals(monitoringId));
             if (!watchId.equals(monitoringId)) {
                 setWatchIdFromStompHeader(accessor, watchId);
                 createWatchLiveAndSave(watchId);
@@ -54,9 +54,12 @@ public class StompInterceptor implements ChannelInterceptor {
 
     private Long getWatchByAuthorizationHeader(StompHeaderAccessor accessor) {
         String authHeaderValue = accessor.getFirstNativeHeader("Authorization");
-        validateAuthorizationHeader(authHeaderValue);
-        validateExistWatch(authHeaderValue);
-        return Long.parseLong(authHeaderValue);
+        long longAuthHeaderValue = Long.parseLong(Objects.requireNonNull(authHeaderValue));
+        if (longAuthHeaderValue != monitoringId) {
+            validateAuthorizationHeader(authHeaderValue);
+            validateExistWatch(authHeaderValue);
+        }
+        return longAuthHeaderValue;
     }
 
     private Object getWatchIdFromStompHeader(StompHeaderAccessor accessor) {

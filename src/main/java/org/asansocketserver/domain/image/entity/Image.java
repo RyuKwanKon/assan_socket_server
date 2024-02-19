@@ -18,8 +18,8 @@ public class Image {
     @GeneratedValue
     private Long id;
     private String imageUrl;
-    @OneToMany(mappedBy = "imageId", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Coordinate> coordinates = new ArrayList<>();
+    @OneToMany
+    private List<Coordinate> coordinateList = new ArrayList<>();
 }
 
 

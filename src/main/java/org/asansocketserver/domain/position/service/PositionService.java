@@ -2,6 +2,7 @@ package org.asansocketserver.domain.position.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.position.dto.ResultDataDTO;
@@ -29,6 +30,7 @@ import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 @Service
 public class PositionService {
     private final BeaconDataRepository beaconDataRepository;
@@ -51,6 +53,7 @@ public class PositionService {
 
     public PositionResponseDto receiveData(PosDataDTO posData) {
         String responseDto;
+        log.info("[watchId]::" + posData.android_id());
         Watch watch = findByWatchOrThrow(posData.android_id());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
         if (!Objects.isNull(positionState))
@@ -201,8 +204,8 @@ public class PositionService {
         return null;
     }
 
-    private Watch findByWatchOrThrow(String uuid) {
-        return watchRepository.findByUuid(uuid)
+    private Watch findByWatchOrThrow(String id) {
+        return watchRepository.findById(Long.parseLong(id))
                 .orElseThrow(() -> new EntityNotFoundException(WATCH_UUID_NOT_FOUND));
     }
 }
