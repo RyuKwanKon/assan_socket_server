@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.position.dto.ResultDataDTO;
 import org.asansocketserver.domain.position.dto.request.BeaconDataDTO;
+import org.asansocketserver.domain.position.dto.request.GetStateDTO;
 import org.asansocketserver.domain.position.dto.request.PosDataDTO;
 import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
@@ -42,13 +43,22 @@ public class PositionService {
     public void insertState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
         PositionState positionState =
-                PositionState.createPositionState(watch.getId(), stateDTO.position());
+                PositionState.createPositionState(watch.getId(), stateDTO.position(), System.currentTimeMillis());
         positionStateRepository.save(positionState);
     }
 
     public void deleteState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
         positionStateRepository.deleteById(watch.getId());
+    }
+
+    public Long getCollectionState(GetStateDTO getStateDTO){
+        Watch watch = findByWatchOrThrow(getStateDTO.androidId());
+        PositionState positionState = positionStateRepository.findById(watch.getId()).orElse(null);
+        if(positionState==null)
+            return 0L;
+        else
+            return positionState.getStartTime();
     }
 
     public PositionResponseDto receiveData(PosDataDTO posData) {

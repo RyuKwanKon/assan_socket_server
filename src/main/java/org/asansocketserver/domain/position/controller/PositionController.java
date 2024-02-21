@@ -3,6 +3,7 @@ package org.asansocketserver.domain.position.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.position.dto.PositionDTO;
+import org.asansocketserver.domain.position.dto.request.GetStateDTO;
 import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.service.PositionService;
 import org.asansocketserver.global.common.SuccessResponse;
@@ -31,6 +32,16 @@ public class PositionController {
     public ResponseEntity<SuccessResponse<?>> deleteState(@RequestBody StateDTO stateDTO) {
         positionService.deleteState(stateDTO);
         return SuccessResponse.ok("success");
+    }
+
+    @GetMapping("/getMapList")
+    public void getMapList(){
+
+    }
+
+    @GetMapping("/getCollectionStatus")
+    public ResponseEntity<SuccessResponse<?>> getCollectionStatus(@RequestParam GetStateDTO getStateDTO){
+        return SuccessResponse.ok(positionService.getCollectionState(getStateDTO));
     }
 }
 

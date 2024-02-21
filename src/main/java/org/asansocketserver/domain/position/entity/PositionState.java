@@ -15,11 +15,13 @@ public class PositionState {
     private Long id;
     @Indexed
     private String position;
+    private Long startTime;
 
-    public static PositionState createPositionState(Long watchId, String position) {
+    public static PositionState createPositionState(Long watchId, String position, Long startTime) {
         return PositionState.builder()
                 .id(watchId)
                 .position(position)
+                .startTime(startTime)
                 .build();
     }
 }
