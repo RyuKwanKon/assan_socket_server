@@ -10,6 +10,8 @@ import org.asansocketserver.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/location")
 @RequiredArgsConstructor
@@ -35,8 +37,9 @@ public class PositionController {
     }
 
     @GetMapping("/getMapList")
-    public void getMapList(){
-
+    public ResponseEntity<?> getMapList(){
+        List<String> maps = positionService.getMapList();
+        return ResponseEntity.ok(maps);
     }
 
     @GetMapping("/getCollectionStatus")

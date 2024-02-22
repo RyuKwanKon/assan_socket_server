@@ -61,6 +61,16 @@ public class PositionService {
             return positionState.getStartTime();
     }
 
+    public List<String> getMapList(){
+        List<BeaconData> beaconDataList = beaconDataRepository.findAll();
+        TreeSet<String> tmpset = new TreeSet<>();
+        for(BeaconData beaconData : beaconDataList){
+            tmpset.add(beaconData.getPosition());
+        }
+        List<String> result = new ArrayList<>(tmpset);
+        return result;
+    }
+
     public PositionResponseDto receiveData(PosDataDTO posData) {
         String responseDto;
         log.info("[watchId]::" + posData.android_id());
