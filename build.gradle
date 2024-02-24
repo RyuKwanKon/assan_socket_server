@@ -47,6 +47,9 @@ dependencies {
     // redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    //swagger (임시)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
 //    // iterator util
 //    implementation 'org.apache.commons:commons-collections4:jar:4.1'
 //
