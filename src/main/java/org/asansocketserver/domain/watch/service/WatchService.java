@@ -2,8 +2,8 @@ package org.asansocketserver.domain.watch.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.asansocketserver.domain.sensor.entity.Sensor;
-import org.asansocketserver.domain.sensor.mongorepository.SensorRepository;
+import org.asansocketserver.domain.sensor.entity.SensorAccelerometer;
+import org.asansocketserver.domain.sensor.mongorepository.SensorAccelerometerRepository;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
@@ -25,7 +25,7 @@ import static org.asansocketserver.global.error.ErrorCode.*;
 @Service
 public class WatchService {
     private final WatchRepository watchRepository;
-    private final SensorRepository sensorRepository;
+    private final SensorAccelerometerRepository sensorAccelerometerRepository;
 
     public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
@@ -52,8 +52,8 @@ public class WatchService {
     }
 
     private void createSensorAndSave(Watch watch) {
-        Sensor sensor = Sensor.createSensor(watch.getId());
-        sensorRepository.save(sensor);
+        SensorAccelerometer sensorAccelerometer = SensorAccelerometer.createSensor(watch.getId());
+        sensorAccelerometerRepository.save(sensorAccelerometer);
     }
 
     private Watch createWatchAndSave(WatchRequestDto watchRequestDto) {

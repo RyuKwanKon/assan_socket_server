@@ -1,11 +1,12 @@
 package org.asansocketserver.domain.sensor.mongorepository;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.sensor.entity.Sensor;
+import org.asansocketserver.domain.sensor.entity.*;
 import org.asansocketserver.domain.sensor.entity.sensorType.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -16,48 +17,58 @@ public class SensorCustomRepositoryImpl implements SensorCustomRepository {
 
     @Override
     public void updateAccelerometer(final Long watchId, final Accelerometer accelerometer) {
-        Sensor sensor = findSensorByWatchId(watchId);
-        if (Objects.isNull(sensor)) return;
-        sensor.getAccelerometerList().add(accelerometer);
-        mongoTemplate.save(sensor);
+        Query query = new Query();
+        Update update = new Update();
+        query.addCriteria(Criteria.where("date").is(LocalDate.now())
+                .and("watchId").is(watchId));
+        update.addToSet("accelerometerList", accelerometer);
+        mongoTemplate.updateFirst(query, update, SensorHeartRate.class);
     }
 
     @Override
     public void updateBarometer(final Long watchId, final Barometer barometer) {
-        Sensor sensor = findSensorByWatchId(watchId);
-        if (Objects.isNull(sensor)) return;
-        sensor.getBarometerList().add(barometer);
-        mongoTemplate.save(sensor);
+        Query query = new Query();
+        Update update = new Update();
+        query.addCriteria(Criteria.where("date").is(LocalDate.now())
+                .and("watchId").is(watchId));
+        update.addToSet("barometerList", barometer);
+        mongoTemplate.updateFirst(query, update, SensorBarometer.class);
     }
 
     @Override
     public void updateGyroscope(final Long watchId, final Gyroscope gyroscope) {
-        Sensor sensor = findSensorByWatchId(watchId);
-        if (Objects.isNull(sensor)) return;
-        sensor.getGyroscopeList().add(gyroscope);
-        mongoTemplate.save(sensor);
+        Query query = new Query();
+        Update update = new Update();
+        query.addCriteria(Criteria.where("date").is(LocalDate.now())
+                .and("watchId").is(watchId));
+        update.addToSet("gyroscopeList", gyroscope);
+        mongoTemplate.updateFirst(query, update, SensorGyroscope.class);
     }
 
     @Override
     public void updateHeartRate(final Long watchId, final HeartRate heartRate) {
-        Sensor sensor = findSensorByWatchId(watchId);
-        if (Objects.isNull(sensor)) return;
-        sensor.getHeartRateList().add(heartRate);
-        mongoTemplate.save(sensor);
+        Query query = new Query();
+        Update update = new Update();
+        query.addCriteria(Criteria.where("date").is(LocalDate.now())
+                .and("watchId").is(watchId));
+        update.addToSet("heartRateList", heartRate);
+        mongoTemplate.updateFirst(query, update, SensorHeartRate.class);
     }
 
     @Override
     public void updateLight(final Long watchId, final Light light) {
-        Sensor sensor = findSensorByWatchId(watchId);
-        if (Objects.isNull(sensor)) return;
-        sensor.getLightList().add(light);
-        mongoTemplate.save(sensor);
+        Query query = new Query();
+        Update update = new Update();
+        query.addCriteria(Criteria.where("date").is(LocalDate.now())
+                .and("watchId").is(watchId));
+        update.addToSet("lightList", light);
+        mongoTemplate.updateFirst(query, update, SensorLight.class);
     }
 
-    private Sensor findSensorByWatchId(Long watchId) {
+    private SensorAccelerometer findAccelerometerByWatchId(Long watchId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("date").is(LocalDate.now())
                 .and("watchId").is(watchId));
-        return mongoTemplate.findOne(query, Sensor.class, "sensor");
+        return mongoTemplate.findOne(query, SensorAccelerometer.class);
     }
 }

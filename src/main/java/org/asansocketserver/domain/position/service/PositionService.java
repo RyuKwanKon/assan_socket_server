@@ -73,7 +73,6 @@ public class PositionService {
 
     public PositionResponseDto receiveData(PosDataDTO posData) {
         String responseDto;
-        log.info("[watchId]::" + posData.android_id());
         Watch watch = findByWatchOrThrow(posData.android_id());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
         if (!Objects.isNull(positionState))

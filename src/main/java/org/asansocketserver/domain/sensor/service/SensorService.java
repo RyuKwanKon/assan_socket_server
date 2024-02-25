@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.sensor.dto.request.*;
 import org.asansocketserver.domain.sensor.dto.response.*;
+import org.asansocketserver.domain.sensor.entity.SensorAccelerometer;
 import org.asansocketserver.domain.sensor.entity.sensorType.*;
-import org.asansocketserver.domain.sensor.mongorepository.SensorRepository;
+import org.asansocketserver.domain.sensor.mongorepository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static org.asansocketserver.domain.sensor.entity.sensorType.Accelerometer.createAccelerometer;
 import static org.asansocketserver.domain.sensor.entity.sensorType.Barometer.createBarometer;
@@ -20,7 +22,12 @@ import static org.asansocketserver.domain.sensor.entity.sensorType.Light.createL
 @RequiredArgsConstructor
 @Service
 public class SensorService {
-    private final SensorRepository sensorRepository;
+    private static final String SESSION_DATA = "watchId";
+    private final SensorAccelerometerRepository sensorAccelerometerRepository;
+    private final SensorGyroscopeRepository sensorGyroscopeRepository;
+    private final SensorBarometerRepository sensorBarometerRepository;
+    private final SensorHeartRateRepository sensorHeartRateRepository;
+    private final SensorLightRepository sensorLightRepository;
 
     public AccelerometerResponseDto sendAccelerometer(Map<String, Object> simpSessionAttributes,
                                                       AccelerometerRequestDto accelerometerRequestDto) {
@@ -63,26 +70,26 @@ public class SensorService {
     }
 
     private Long getWatchIdFromSession(Map<String, Object> simpSessionAttributes) {
-        return (Long) simpSessionAttributes.get("watchId");
+        return (Long) simpSessionAttributes.get(SESSION_DATA);
     }
 
     private void updateAccelerometer(Long watchId, Accelerometer accelerometer) {
-        sensorRepository.updateAccelerometer(watchId, accelerometer);
+        sensorAccelerometerRepository.updateAccelerometer(watchId, accelerometer);
     }
 
     private void updateBarometer(Long watchId, Barometer barometer) {
-        sensorRepository.updateBarometer(watchId, barometer);
+        sensorBarometerRepository.updateBarometer(watchId, barometer);
     }
 
     private void updateGyroscope(Long watchId, Gyroscope gyroscope) {
-        sensorRepository.updateGyroscope(watchId, gyroscope);
+        sensorGyroscopeRepository.updateGyroscope(watchId, gyroscope);
     }
 
     private void updateHeartRate(Long watchId, HeartRate heartRate) {
-        sensorRepository.updateHeartRate(watchId, heartRate);
+        sensorHeartRateRepository.updateHeartRate(watchId, heartRate);
     }
 
     private void updateLight(Long watchId, Light light) {
-        sensorRepository.updateLight(watchId, light);
+        sensorLightRepository.updateLight(watchId, light);
     }
 }

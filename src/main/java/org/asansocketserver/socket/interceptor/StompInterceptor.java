@@ -32,7 +32,6 @@ public class StompInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
-        System.out.println(command);
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
             System.out.println(!watchId.equals(monitoringId));
@@ -72,18 +71,20 @@ public class StompInterceptor implements ChannelInterceptor {
 
     private void setWatchIdFromStompHeader(StompHeaderAccessor accessor, Object value) {
         Map<String, Object> sessionAttributes = getSessionAttributes(accessor);
+        if (Objects.isNull(sessionAttributes)) return;
         sessionAttributes.put("watchId", value);
     }
 
     private void deleteWatchIdFromStompHeader(StompHeaderAccessor accessor) {
         Map<String, Object> sessionAttributes = getSessionAttributes(accessor);
+        if (Objects.isNull(sessionAttributes)) return;
         sessionAttributes.remove("watchId");
     }
 
     private Map<String, Object> getSessionAttributes(StompHeaderAccessor accessor) {
         Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
         if (Objects.isNull(sessionAttributes))
-            throw new SocketException(SESSION_ATTRIBUTE_NOT_FOUND);
+            return null;
         return sessionAttributes;
     }
 
