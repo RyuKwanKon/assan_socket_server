@@ -7,11 +7,13 @@ import java.time.LocalDateTime;
 
 @Builder(access = AccessLevel.PRIVATE)
 public record PositionResponseDto(
+        Long watchId,
         LocalDateTime currentTime,
         String position
 ) {
-    public static PositionResponseDto of(String date) {
+    public static PositionResponseDto of(Long watchId, String date) {
         return PositionResponseDto.builder()
+                .watchId(watchId)
                 .currentTime(LocalDateTime.now())
                 .position(date)
                 .build();

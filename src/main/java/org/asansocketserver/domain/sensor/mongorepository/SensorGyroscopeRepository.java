@@ -7,4 +7,5 @@ import java.time.LocalDate;
 
 public interface SensorGyroscopeRepository extends MongoRepository<SensorGyroscope, String>, SensorCustomRepository {
     boolean existsByWatchIdAndDate(Long watchId, LocalDate date);
+    SensorGyroscope findOneByWatchIdAndDate(Long watchId, LocalDate date);
 }

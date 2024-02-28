@@ -7,4 +7,5 @@ import java.time.LocalDate;
 
 public interface SensorLightRepository extends MongoRepository<SensorLight, String>, SensorCustomRepository {
     boolean existsByWatchIdAndDate(Long watchId, LocalDate date);
+    SensorLight findOneByWatchIdAndDate(Long watchId, LocalDate date);
 }

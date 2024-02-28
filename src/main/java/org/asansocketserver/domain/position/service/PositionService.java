@@ -12,7 +12,10 @@ import org.asansocketserver.domain.position.dto.request.PosDataDTO;
 import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
 import org.asansocketserver.domain.position.entity.BeaconData;
+import org.asansocketserver.domain.position.entity.Position;
+import org.asansocketserver.domain.position.entity.PositionData;
 import org.asansocketserver.domain.position.entity.PositionState;
+import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
 import org.asansocketserver.domain.position.repository.BeaconDataRepository;
 import org.asansocketserver.domain.position.repository.PositionStateRepository;
 import org.asansocketserver.domain.position.util.BeaconDataUtil;
@@ -39,6 +42,7 @@ public class PositionService {
     private final ThreadPoolTaskExecutor taskExecutor;
     private final BeaconDataUtil beaconDataUtil;
     private final PositionStateRepository positionStateRepository;
+    private final PositionMongoRepository positionMongoRepository;
 
     public void insertState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
@@ -52,19 +56,19 @@ public class PositionService {
         positionStateRepository.deleteById(watch.getId());
     }
 
-    public Long getCollectionState(GetStateDTO getStateDTO){
+    public Long getCollectionState(GetStateDTO getStateDTO) {
         Watch watch = findByWatchOrThrow(getStateDTO.androidId());
         PositionState positionState = positionStateRepository.findById(watch.getId()).orElse(null);
-        if(positionState==null)
+        if (positionState == null)
             return 0L;
         else
             return positionState.getStartTime();
     }
 
-    public List<String> getMapList(){
+    public List<String> getMapList() {
         List<BeaconData> beaconDataList = beaconDataRepository.findAll();
         TreeSet<String> tmpset = new TreeSet<>();
-        for(BeaconData beaconData : beaconDataList){
+        for (BeaconData beaconData : beaconDataList) {
             tmpset.add(beaconData.getPosition());
         }
         List<String> result = new ArrayList<>(tmpset);
@@ -77,9 +81,12 @@ public class PositionService {
         PositionState positionState = findByPositionStateOrNull(watch.getId());
         if (!Objects.isNull(positionState))
             responseDto = addPosData(posData, positionState.getPosition());
-        else
+        else {
             responseDto = findPosition(posData);
-        return PositionResponseDto.of(responseDto);
+            PositionData positionData = PositionData.of(responseDto);
+            updatePositionData(watch.getId(), positionData);
+        }
+        return PositionResponseDto.of(watch.getId(), responseDto);
     }
 
     private PositionState findByPositionStateOrNull(Long id) {
@@ -226,6 +233,10 @@ public class PositionService {
     private Watch findByWatchOrThrow(String id) {
         return watchRepository.findById(Long.parseLong(id))
                 .orElseThrow(() -> new EntityNotFoundException(WATCH_UUID_NOT_FOUND));
+    }
+
+    private void updatePositionData(Long watchId, PositionData position) {
+        positionMongoRepository.updatePosition(watchId, position);
     }
 }
 

@@ -2,6 +2,10 @@ package org.asansocketserver.socket.interceptor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.domain.position.entity.Position;
+import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
+import org.asansocketserver.domain.sensor.entity.*;
+import org.asansocketserver.domain.sensor.mongorepository.*;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
@@ -15,6 +19,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,7 +31,14 @@ import static org.asansocketserver.socket.error.SocketErrorCode.*;
 public class StompInterceptor implements ChannelInterceptor {
     public final static Long monitoringId = 9999999L;
     private final WatchRepository watchRepository;
+    private final SensorAccelerometerRepository sensorAccelerometerRepository;
+    private final SensorBarometerRepository sensorBarometerRepository;
+    private final SensorGyroscopeRepository sensorGyroscopeRepository;
+    private final SensorHeartRateRepository sensorHeartRateRepository;
+    private final SensorLightRepository sensorLightRepository;
+    private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
+
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -34,10 +46,15 @@ public class StompInterceptor implements ChannelInterceptor {
         StompCommand command = accessor.getCommand();
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
-            System.out.println(!watchId.equals(monitoringId));
             if (!watchId.equals(monitoringId)) {
                 setWatchIdFromStompHeader(accessor, watchId);
                 createWatchLiveAndSave(watchId);
+                createAccelerometerAndSave(watchId);
+                createBarometerAndSave(watchId);
+                createGyroscopeAndSave(watchId);
+                createHeartRateAndSave(watchId);
+                createLightAndSave(watchId);
+                createPositionAndSave(watchId);
             }
             log.info("[CONNECT]:: watchId : " + watchId);
         } else if (StompCommand.DISCONNECT.equals(command)) {
@@ -91,6 +108,42 @@ public class StompInterceptor implements ChannelInterceptor {
     private void createWatchLiveAndSave(Long watchId) {
         WatchLive watchLive = WatchLive.createWatchLive(watchId);
         watchLiveRepository.save(watchLive);
+    }
+
+    private void createAccelerometerAndSave(Long watchId) {
+        if (sensorAccelerometerRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorAccelerometer sensorAccelerometer = SensorAccelerometer.createSensor(watchId);
+        sensorAccelerometerRepository.save(sensorAccelerometer);
+    }
+
+    private void createBarometerAndSave(Long watchId) {
+        if (sensorBarometerRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorBarometer sensorBarometer = SensorBarometer.createSensor(watchId);
+        sensorBarometerRepository.save(sensorBarometer);
+    }
+
+    private void createGyroscopeAndSave(Long watchId) {
+        if (sensorGyroscopeRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorGyroscope sensorGyroscope = SensorGyroscope.createSensor(watchId);
+        sensorGyroscopeRepository.save(sensorGyroscope);
+    }
+
+    private void createHeartRateAndSave(Long watchId) {
+        if (sensorHeartRateRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorHeartRate sensorHeartRate = SensorHeartRate.createSensor(watchId);
+        sensorHeartRateRepository.save(sensorHeartRate);
+    }
+
+    private void createLightAndSave(Long watchId) {
+        if (sensorLightRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorLight sensorLight = SensorLight.createSensor(watchId);
+        sensorLightRepository.save(sensorLight);
+    }
+
+    private void createPositionAndSave(Long watchId) {
+        if (positionMongoRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        Position position = Position.of(watchId);
+        positionMongoRepository.save(position);
     }
 
     private void validateAuthorizationHeader(String authHeaderValue) {

@@ -1,7 +1,10 @@
 package org.asansocketserver.domain.sensor.mongorepository;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.sensor.entity.*;
+import org.asansocketserver.domain.sensor.entity.SensorBarometer;
+import org.asansocketserver.domain.sensor.entity.SensorGyroscope;
+import org.asansocketserver.domain.sensor.entity.SensorHeartRate;
+import org.asansocketserver.domain.sensor.entity.SensorLight;
 import org.asansocketserver.domain.sensor.entity.sensorType.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -9,7 +12,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.time.LocalDate;
-import java.util.Objects;
 
 @RequiredArgsConstructor
 public class SensorCustomRepositoryImpl implements SensorCustomRepository {
@@ -47,6 +49,7 @@ public class SensorCustomRepositoryImpl implements SensorCustomRepository {
 
     @Override
     public void updateHeartRate(final Long watchId, final HeartRate heartRate) {
+        System.out.println(heartRate.getTimeStamp());
         Query query = new Query();
         Update update = new Update();
         query.addCriteria(Criteria.where("date").is(LocalDate.now())
@@ -63,12 +66,5 @@ public class SensorCustomRepositoryImpl implements SensorCustomRepository {
                 .and("watchId").is(watchId));
         update.addToSet("lightList", light);
         mongoTemplate.updateFirst(query, update, SensorLight.class);
-    }
-
-    private SensorAccelerometer findAccelerometerByWatchId(Long watchId) {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("date").is(LocalDate.now())
-                .and("watchId").is(watchId));
-        return mongoTemplate.findOne(query, SensorAccelerometer.class);
     }
 }
