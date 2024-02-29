@@ -20,7 +20,7 @@ public class PositionCustomRepositoryImpl implements PositionCustomRepository {
         Update update = new Update();
         query.addCriteria(Criteria.where("date").is(LocalDate.now())
                 .and("watchId").is(watchId));
-        update.addToSet("positionDateList", positionData);
+        update.addToSet("positionDataList", positionData);
         mongoTemplate.updateFirst(query, update, Position.class);
     }
 }

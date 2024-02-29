@@ -14,7 +14,7 @@ public class Barometer {
     public static Barometer createBarometer(BarometerRequestDto requestDto) {
         return Barometer.builder()
                 .value(requestDto.value())
-                .timeStamp(requestDto.timeStamp())
+                .timeStamp(requestDto.timeStamp().toString())
                 .build();
     }
 }

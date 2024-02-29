@@ -22,7 +22,6 @@ public class Position {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "position_list")
     @Builder.Default
     List<PositionData> positionDataList = new ArrayList<>();
 

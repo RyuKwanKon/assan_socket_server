@@ -14,7 +14,7 @@ public class HeartRate {
     public static HeartRate createHeartRate(HeartRateRequestDto requestDto) {
         return HeartRate.builder()
                 .value(requestDto.value())
-                .timeStamp(requestDto.timeStamp())
+                .timeStamp(requestDto.timeStamp().toString())
                 .build();
     }
 }

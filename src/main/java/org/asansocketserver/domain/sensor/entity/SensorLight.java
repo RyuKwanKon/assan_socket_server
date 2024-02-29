@@ -23,7 +23,6 @@ public class SensorLight {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "light_list")
     @Builder.Default
     List<Light> lightList = new ArrayList<>();
 

@@ -46,8 +46,8 @@ public class StompInterceptor implements ChannelInterceptor {
         StompCommand command = accessor.getCommand();
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
+            setWatchIdFromStompHeader(accessor, watchId);
             if (!watchId.equals(monitoringId)) {
-                setWatchIdFromStompHeader(accessor, watchId);
                 createWatchLiveAndSave(watchId);
                 createAccelerometerAndSave(watchId);
                 createBarometerAndSave(watchId);

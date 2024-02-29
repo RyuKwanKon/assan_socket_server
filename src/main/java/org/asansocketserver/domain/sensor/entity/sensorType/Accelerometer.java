@@ -18,7 +18,7 @@ public class Accelerometer {
                 .accX(requestDto.accX())
                 .accY(requestDto.accY())
                 .accZ(requestDto.accZ())
-                .timeStamp(requestDto.timeStamp())
+                .timeStamp(requestDto.timeStamp().toString())
                 .build();
     }
 }

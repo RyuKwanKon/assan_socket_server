@@ -1,10 +1,7 @@
 package org.asansocketserver.domain.sensor.mongorepository;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.sensor.entity.SensorBarometer;
-import org.asansocketserver.domain.sensor.entity.SensorGyroscope;
-import org.asansocketserver.domain.sensor.entity.SensorHeartRate;
-import org.asansocketserver.domain.sensor.entity.SensorLight;
+import org.asansocketserver.domain.sensor.entity.*;
 import org.asansocketserver.domain.sensor.entity.sensorType.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -24,7 +21,7 @@ public class SensorCustomRepositoryImpl implements SensorCustomRepository {
         query.addCriteria(Criteria.where("date").is(LocalDate.now())
                 .and("watchId").is(watchId));
         update.addToSet("accelerometerList", accelerometer);
-        mongoTemplate.updateFirst(query, update, SensorHeartRate.class);
+        mongoTemplate.updateFirst(query, update, SensorAccelerometer.class);
     }
 
     @Override

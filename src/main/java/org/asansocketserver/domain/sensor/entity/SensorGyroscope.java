@@ -24,7 +24,6 @@ public class SensorGyroscope {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "gyroscope_list")
     @Builder.Default
     List<Gyroscope> gyroscopeList = new ArrayList<>();
 

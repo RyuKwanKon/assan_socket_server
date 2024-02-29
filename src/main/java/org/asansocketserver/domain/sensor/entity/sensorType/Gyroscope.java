@@ -18,7 +18,7 @@ public class Gyroscope {
                 .gyroX(requestDto.gyroX())
                 .gyroY(requestDto.gyroY())
                 .gyroZ(requestDto.gyroZ())
-                .timeStamp(requestDto.timeStamp())
+                .timeStamp(requestDto.timeStamp().toString())
                 .build();
     }
 }

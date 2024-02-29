@@ -4,6 +4,6 @@ public record GyroscopeRequestDto(
         Float gyroX,
         Float gyroY,
         Float gyroZ,
-        String timeStamp
+        Long timeStamp
 ) {
 }

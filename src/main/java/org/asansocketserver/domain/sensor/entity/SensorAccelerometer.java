@@ -23,7 +23,6 @@ public class SensorAccelerometer {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "accelerometer_list")
     @Builder.Default
     List<Accelerometer> accelerometerList = new ArrayList<>();
 

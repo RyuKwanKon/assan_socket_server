@@ -23,7 +23,6 @@ public class SensorHeartRate {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "heartRate_list")
     @Builder.Default
     List<HeartRate> heartRateList = new ArrayList<>();
 

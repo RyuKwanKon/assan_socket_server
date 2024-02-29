@@ -14,7 +14,7 @@ public class Light {
     public static Light createLight(LightRequestDto requestDto) {
         return Light.builder()
                 .value(requestDto.value())
-                .timeStamp(requestDto.timeStamp())
+                .timeStamp(requestDto.timeStamp().toString())
                 .build();
     }
 }

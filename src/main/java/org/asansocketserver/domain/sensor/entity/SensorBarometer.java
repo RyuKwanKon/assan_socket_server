@@ -23,7 +23,6 @@ public class SensorBarometer {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "barometer_list")
     @Builder.Default
     List<Barometer> barometerList = new ArrayList<>();
 
