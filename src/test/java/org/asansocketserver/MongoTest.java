@@ -3,7 +3,7 @@
 //import org.asansocketserver.domain.sensor.dto.request.HeartRateRequestDto;
 //import org.asansocketserver.domain.sensor.entity.SensorHeartRate;
 //import org.asansocketserver.domain.sensor.entity.sensorType.HeartRate;
-//import org.asansocketserver.domain.sensor.mongorepository.SensorHeartRateRepository;
+//import org.asansocketserver.domain.sensor.mongorepository.heartrate.SensorHeartRateRepository;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;

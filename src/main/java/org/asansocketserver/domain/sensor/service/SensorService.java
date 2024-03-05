@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.sensor.dto.request.*;
 import org.asansocketserver.domain.sensor.dto.response.*;
-import org.asansocketserver.domain.sensor.entity.SensorAccelerometer;
+import org.asansocketserver.domain.sensor.entity.*;
 import org.asansocketserver.domain.sensor.entity.sensorType.*;
-import org.asansocketserver.domain.sensor.mongorepository.*;
+import org.asansocketserver.domain.sensor.mongorepository.Gyroscope.SensorGyroscopeRepository;
+import org.asansocketserver.domain.sensor.mongorepository.accelerometer.SensorAccelerometerRepository;
+import org.asansocketserver.domain.sensor.mongorepository.barometer.SensorBarometerRepository;
+import org.asansocketserver.domain.sensor.mongorepository.heartrate.SensorHeartRateRepository;
+import org.asansocketserver.domain.sensor.mongorepository.light.SensorLightRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.Objects;
 
 import static org.asansocketserver.domain.sensor.entity.sensorType.Accelerometer.createAccelerometer;
 import static org.asansocketserver.domain.sensor.entity.sensorType.Barometer.createBarometer;
@@ -33,7 +36,7 @@ public class SensorService {
                                                       AccelerometerRequestDto accelerometerRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Accelerometer createdAccelerometer = createAccelerometer(accelerometerRequestDto);
-        updateAccelerometer(watchId, createdAccelerometer);
+        createAccelerometerAndSave(watchId, accelerometerRequestDto);
         return AccelerometerResponseDto.of(createdAccelerometer);
     }
 
@@ -41,7 +44,7 @@ public class SensorService {
                                               BarometerRequestDto barometerRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Barometer barometer = createBarometer(barometerRequestDto);
-        updateBarometer(watchId, barometer);
+        createBarometerAndSave(watchId, barometerRequestDto);
         return BarometerResponseDto.of(barometer);
     }
 
@@ -49,7 +52,7 @@ public class SensorService {
                                               GyroscopeRequestDto gyroscopeRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Gyroscope gyroscope = createGyroscope(gyroscopeRequestDto);
-        updateGyroscope(watchId, gyroscope);
+        createGyroscopeAndSave(watchId, gyroscopeRequestDto);
         return GyroscopeResponseDto.of(gyroscope);
     }
 
@@ -57,7 +60,7 @@ public class SensorService {
                                               HeartRateRequestDto heartRateRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         HeartRate heartRate = createHeartRate(heartRateRequestDto);
-        updateHeartRate(watchId, heartRate);
+        createHeartRateAndSave(watchId, heartRateRequestDto);
         return HeartRateResponseDto.of(heartRate);
     }
 
@@ -65,7 +68,7 @@ public class SensorService {
                                       LightRequestDto lightRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Light light = createLight(lightRequestDto);
-        updateLight(watchId, light);
+        createLightAndSave(watchId, lightRequestDto);
         return LightResponseDto.of(light);
     }
 
@@ -73,23 +76,28 @@ public class SensorService {
         return (Long) simpSessionAttributes.get(SESSION_DATA);
     }
 
-    private void updateAccelerometer(Long watchId, Accelerometer accelerometer) {
-        sensorAccelerometerRepository.updateAccelerometer(watchId, accelerometer);
+    private void createAccelerometerAndSave(Long watchId, AccelerometerRequestDto accelerometer) {
+        SensorAccelerometer sensorAccelerometer = SensorAccelerometer.createSensor(watchId, accelerometer);
+        sensorAccelerometerRepository.save(sensorAccelerometer);
     }
 
-    private void updateBarometer(Long watchId, Barometer barometer) {
-        sensorBarometerRepository.updateBarometer(watchId, barometer);
+    private void createBarometerAndSave(Long watchId, BarometerRequestDto barometerRequestDto) {
+        SensorBarometer sensorBarometer = SensorBarometer.createSensor(watchId, barometerRequestDto);
+        sensorBarometerRepository.save(sensorBarometer);
     }
 
-    private void updateGyroscope(Long watchId, Gyroscope gyroscope) {
-        sensorGyroscopeRepository.updateGyroscope(watchId, gyroscope);
+    private void createGyroscopeAndSave(Long watchId, GyroscopeRequestDto gyroscopeRequestDto) {
+        SensorGyroscope sensorGyroscope = SensorGyroscope.createSensor(watchId, gyroscopeRequestDto);
+        sensorGyroscopeRepository.save(sensorGyroscope);
     }
 
-    private void updateHeartRate(Long watchId, HeartRate heartRate) {
-        sensorHeartRateRepository.updateHeartRate(watchId, heartRate);
+    private void createHeartRateAndSave(Long watchId, HeartRateRequestDto heartRateRequestDto) {
+        SensorHeartRate sensorHeartRate = SensorHeartRate.createSensor(watchId, heartRateRequestDto);
+        sensorHeartRateRepository.save(sensorHeartRate);
     }
 
-    private void updateLight(Long watchId, Light light) {
-        sensorLightRepository.updateLight(watchId, light);
+    private void createLightAndSave(Long watchId, LightRequestDto lightRequestDto) {
+        SensorLight sensorLight = SensorLight.createSensor(watchId, lightRequestDto);
+        sensorLightRepository.save(sensorLight);
     }
 }

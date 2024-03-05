@@ -2,6 +2,7 @@ package org.asansocketserver.domain.sensor.entity;
 
 import jakarta.persistence.Id;
 import lombok.*;
+import org.asansocketserver.domain.sensor.dto.request.GyroscopeRequestDto;
 import org.asansocketserver.domain.sensor.entity.sensorType.Barometer;
 import org.asansocketserver.domain.sensor.entity.sensorType.Gyroscope;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -24,13 +25,23 @@ public class SensorGyroscope {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Builder.Default
-    List<Gyroscope> gyroscopeList = new ArrayList<>();
+    @Field(name = "gyroX")
+    private Float gyroX;
+    @Field(name = "gyroY")
+    private Float gyroY;
+    @Field(name = "gyroZ")
+    private Float gyroZ;
+    @Field(name = "timeStamp")
+    private Long timeStamp;
 
-    public static SensorGyroscope createSensor(Long watchId) {
+    public static SensorGyroscope createSensor(Long watchId, GyroscopeRequestDto gyroscopeRequestDto) {
         return SensorGyroscope.builder()
                 .date(LocalDate.now())
                 .watchId(watchId)
+                .gyroX(gyroscopeRequestDto.gyroX())
+                .gyroY(gyroscopeRequestDto.gyroY())
+                .gyroZ(gyroscopeRequestDto.gyroZ())
+                .timeStamp(gyroscopeRequestDto.timeStamp())
                 .build();
     }
 }

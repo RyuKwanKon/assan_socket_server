@@ -15,7 +15,10 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @RequiredArgsConstructor
 @EnableMongoAuditing
-@EnableMongoRepositories(basePackages = "org.asansocketserver.domain.*.mongorepository")
+@EnableMongoRepositories(basePackages = {
+        "org.asansocketserver.domain.*.mongorepository",
+        "org.asansocketserver.batch.cdc.repository"
+})
 public class MongoConfig {
     private final MongoMappingContext mongoMappingContext;
 

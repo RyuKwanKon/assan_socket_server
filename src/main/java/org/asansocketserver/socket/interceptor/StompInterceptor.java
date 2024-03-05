@@ -2,10 +2,10 @@ package org.asansocketserver.socket.interceptor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.batch.cdc.entity.SensorData;
+import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
 import org.asansocketserver.domain.position.entity.Position;
 import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
-import org.asansocketserver.domain.sensor.entity.*;
-import org.asansocketserver.domain.sensor.mongorepository.*;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
@@ -31,11 +31,7 @@ import static org.asansocketserver.socket.error.SocketErrorCode.*;
 public class StompInterceptor implements ChannelInterceptor {
     public final static Long monitoringId = 9999999L;
     private final WatchRepository watchRepository;
-    private final SensorAccelerometerRepository sensorAccelerometerRepository;
-    private final SensorBarometerRepository sensorBarometerRepository;
-    private final SensorGyroscopeRepository sensorGyroscopeRepository;
-    private final SensorHeartRateRepository sensorHeartRateRepository;
-    private final SensorLightRepository sensorLightRepository;
+    private final SensorDataRepository sensorDataRepository;
     private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
 
@@ -49,11 +45,7 @@ public class StompInterceptor implements ChannelInterceptor {
             setWatchIdFromStompHeader(accessor, watchId);
             if (!watchId.equals(monitoringId)) {
                 createWatchLiveAndSave(watchId);
-                createAccelerometerAndSave(watchId);
-                createBarometerAndSave(watchId);
-                createGyroscopeAndSave(watchId);
-                createHeartRateAndSave(watchId);
-                createLightAndSave(watchId);
+                createSensorDataAndSave(watchId);
                 createPositionAndSave(watchId);
             }
             log.info("[CONNECT]:: watchId : " + watchId);
@@ -110,34 +102,10 @@ public class StompInterceptor implements ChannelInterceptor {
         watchLiveRepository.save(watchLive);
     }
 
-    private void createAccelerometerAndSave(Long watchId) {
-        if (sensorAccelerometerRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorAccelerometer sensorAccelerometer = SensorAccelerometer.createSensor(watchId);
-        sensorAccelerometerRepository.save(sensorAccelerometer);
-    }
-
-    private void createBarometerAndSave(Long watchId) {
-        if (sensorBarometerRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorBarometer sensorBarometer = SensorBarometer.createSensor(watchId);
-        sensorBarometerRepository.save(sensorBarometer);
-    }
-
-    private void createGyroscopeAndSave(Long watchId) {
-        if (sensorGyroscopeRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorGyroscope sensorGyroscope = SensorGyroscope.createSensor(watchId);
-        sensorGyroscopeRepository.save(sensorGyroscope);
-    }
-
-    private void createHeartRateAndSave(Long watchId) {
-        if (sensorHeartRateRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorHeartRate sensorHeartRate = SensorHeartRate.createSensor(watchId);
-        sensorHeartRateRepository.save(sensorHeartRate);
-    }
-
-    private void createLightAndSave(Long watchId) {
-        if (sensorLightRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorLight sensorLight = SensorLight.createSensor(watchId);
-        sensorLightRepository.save(sensorLight);
+    private void createSensorDataAndSave(Long watchId) {
+        if (sensorDataRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+        SensorData sensorData = SensorData.createSensorData(watchId);
+        sensorDataRepository.save(sensorData);
     }
 
     private void createPositionAndSave(Long watchId) {

@@ -1,9 +1,7 @@
-package org.asansocketserver.domain.sensor.entity;
+package org.asansocketserver.batch.cdc.entity;
 
 import jakarta.persistence.Id;
 import lombok.*;
-import org.asansocketserver.domain.sensor.dto.request.BarometerRequestDto;
-import org.asansocketserver.domain.sensor.entity.sensorType.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -15,8 +13,8 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(access = AccessLevel.PRIVATE)
 @Getter
-@Document(collection = "sensor_barometer")
-public class SensorBarometer {
+@Document(collection = "sensor_data")
+public class SensorData {
     @Id
     @Field(name = "_id")
     private String id;
@@ -24,17 +22,13 @@ public class SensorBarometer {
     private LocalDate date;
     @Field(name = "watch_id")
     private Long watchId;
-    @Field(name = "value")
-    private Float value;
-    @Field(name = "timestamp")
-    private Long timestamp;
+    @Builder.Default
+    List<SensorRow> sensorRowList = new ArrayList<>();
 
-    public static SensorBarometer createSensor(Long watchId, BarometerRequestDto barometerRequestDto) {
-        return SensorBarometer.builder()
+    public static SensorData createSensorData(Long watchId) {
+        return SensorData.builder()
                 .date(LocalDate.now())
                 .watchId(watchId)
-                .value(barometerRequestDto.value())
-                .timestamp(barometerRequestDto.timeStamp())
                 .build();
     }
 }
