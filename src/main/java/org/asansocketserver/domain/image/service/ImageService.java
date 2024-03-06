@@ -2,18 +2,23 @@ package org.asansocketserver.domain.image.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.image.dto.CoordinateDTO;
-import org.asansocketserver.domain.image.dto.ImageResponseDto;
-import org.asansocketserver.domain.image.dto.LabelDataDTO;
+import org.asansocketserver.domain.image.dto.*;
 import org.asansocketserver.domain.image.entity.Coordinate;
 import org.asansocketserver.domain.image.entity.Image;
 import org.asansocketserver.domain.image.repository.CoordinateRepository;
 import org.asansocketserver.domain.image.repository.ImageRepository;
 import org.asansocketserver.domain.position.dto.PositionDTO;
+import org.asansocketserver.domain.position.repository.BeaconDataRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Transactional
@@ -21,34 +26,66 @@ import java.util.List;
 public class ImageService {
     private final CoordinateRepository coordinateRepository;
     private final ImageRepository imageRepository;
+    private final BeaconDataRepository beaconDataRepository;
+    public static String UPLOAD_DIR = "C:\\Users\\qkrwo\\uploads\\images\\";
 
-    public ImageResponseDto getImage() {
-        List<Image> image = imageRepository.findAll();
-        return ImageResponseDto.of(image.get(0).getImageUrl());
+
+    public ImageResponseDto getImage(Long id)  {
+        Optional<Image> image = imageRepository.findById(id);
+        String imageUrl = image.get().getImageUrl();
+        return  ImageResponseDto.of(image.get().getId(),imageUrl);
     }
 
 
-    public Long saveImage(String imageUrl) {
-        //유저 가져오는 부분까지 해야함.
-        Image image = Image.builder().imageUrl(imageUrl).build();
 
-        List<Image> imageAll = imageRepository.findAll();
-        int imageCounts = imageAll.size();
+    public ImageListDTO getImageList() {
+        List<Image> images = imageRepository.findAll();
+        List<Long>  imageIdDtoArrayList = new ArrayList<>();
+        List<String>  imageNameDtoArrayList = new ArrayList<>();
 
-        if (imageCounts > 0) {
-            throw new IllegalArgumentException("이미지가 이미 업로드되어 있습니다. 이전 이미지를 삭제해주세요.");
+        for (Image image : images) {
+            imageIdDtoArrayList.add(image.getId());
+            imageNameDtoArrayList.add(image.getImageName());
+
         }
+        ImageListDTO imageListDTO = new ImageListDTO();
+        imageListDTO.setImageIds(imageIdDtoArrayList);
+        imageListDTO.setImageNames(imageNameDtoArrayList);
+        return imageListDTO;
+    }
 
+
+    public Long saveImage(MultipartFile file) throws IOException {
+
+        byte[] bytes = file.getBytes();
+        Path path = Paths.get(UPLOAD_DIR  + "\\" + file.getOriginalFilename());
+        Files.write(path, bytes);
+
+        Image image = Image.builder().imageUrl("/images/" + file.getOriginalFilename()).imageName("지정되지 않음").build();
         Image saveImage = imageRepository.save(image);
         return saveImage.getId();
     }
+
+    public Long nameChange(ImageIdAndNameDTO imageIdAndNameDTO) {
+
+        Image image = (imageRepository.findById(imageIdAndNameDTO.getImageId()).orElseThrow(() ->
+                new IllegalArgumentException("해당 이미지가 존재하지 않습니다 :" + imageIdAndNameDTO.getImageId())));
+
+
+        image.updateName(imageIdAndNameDTO.getImageName());
+
+        return image.getId();
+    }
+
 
     public void deleteImage(Long imageId) {
 
         Image image = (imageRepository.findById(imageId).orElseThrow(() ->
                 new IllegalArgumentException("해당 이미지가 존재하지 않습니다 :" + imageId)));
 
+        beaconDataRepository.deleteAllByImageId(image.getId());
         imageRepository.delete(image);
+
     }
 
     public void saveImagePositionAndCoordinates(LabelDataDTO labelDataDTO) {
@@ -62,11 +99,13 @@ public class ImageService {
         if (existingCoordinate != null) {
             throw new IllegalArgumentException("해당 이미지의 위치가 이미 존재합니다.");
         }
-
+        System.out.println("labelDataDTO.getStartX() = " + labelDataDTO.getStartX());
         try {
             Coordinate coordinate = Coordinate.builder()
                     .imageId(image)
                     .position(labelDataDTO.getPosition())
+                    .latitude(labelDataDTO.getLatitude())
+                    .longitude(labelDataDTO.getLongitude())
                     .startX(labelDataDTO.getStartX())
                     .startY(labelDataDTO.getStartY())
                     .endX(labelDataDTO.getEndX())
@@ -79,17 +118,15 @@ public class ImageService {
     }
 
 
-    public void deleteImagePositionAndCoordinates(Long coordinateId) {
-
-
-        Coordinate coordinate = (coordinateRepository.findById(coordinateId).orElseThrow(() ->
-                new IllegalArgumentException("해당 위치 및 좌표가 존재하지 않습니다 : unknown id = " + coordinateId)));
-
+    public void deleteImagePositionAndCoordinates(String positionName) {
+        Coordinate coordinate = coordinateRepository.findByPosition(positionName);
+        beaconDataRepository.deleteAllByPosition(positionName);
         coordinateRepository.delete(coordinate);
     }
 
-    public List<CoordinateDTO> getPositionAndCoordinateList() {
-        List<Coordinate> coordinateList = coordinateRepository.findAll();
+    public List<CoordinateDTO> getPositionAndCoordinateList(Long id) {
+        Optional<Image> image = imageRepository.findById(id);
+        List<Coordinate> coordinateList = coordinateRepository.findAllByImageId(image);
         List<CoordinateDTO> coordinateDTOList = new ArrayList<>();
 
         if (coordinateList.isEmpty()) {
@@ -100,12 +137,13 @@ public class ImageService {
                 CoordinateDTO coordinateDTO = new CoordinateDTO();
                 coordinateDTO.setImageId(coordinate.getImageId().getId());
                 coordinateDTO.setCoordinateId(coordinate.getId());
+                coordinateDTO.setLatitude(coordinate.getLatitude());
+                coordinateDTO.setLongitude(coordinate.getLongitude());
                 coordinateDTO.setPosition(coordinate.getPosition());
                 coordinateDTO.setStartX(coordinate.getStartX());
                 coordinateDTO.setStartY(coordinate.getStartY());
                 coordinateDTO.setEndX(coordinate.getEndX());
-                coordinateDTO.setEndY(coordinate.getEndX());
-
+                coordinateDTO.setEndY(coordinate.getEndY());
                 coordinateDTOList.add(coordinateDTO);
             }
         }
