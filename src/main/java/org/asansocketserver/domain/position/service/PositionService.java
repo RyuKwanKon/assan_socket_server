@@ -148,7 +148,7 @@ public class PositionService {
                     }
                 }).collect(Collectors.toList());
 
-        return calcKnn(results, 4);
+        return calcKnn(results, 7);
     }
 
 

@@ -27,8 +27,8 @@ public class ImageService {
     private final CoordinateRepository coordinateRepository;
     private final ImageRepository imageRepository;
     private final BeaconDataRepository beaconDataRepository;
-    public static String UPLOAD_DIR = "C:\\Users\\Gachon\\uploads\\images\\";
-
+//    public static String UPLOAD_DIR = "C:\\Users\\qkrwo\\uploads\\images\\";
+public static String UPLOAD_DIR = "C:\\Users\\Gachon\\uploads\\images\\";
 
     public ImageResponseDto getImage(Long id)  {
         Optional<Image> image = imageRepository.findById(id);
