@@ -1,12 +1,9 @@
 package org.asansocketserver.domain.image.dto;
 
-
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-public class ImageDataDTO {
-
+public class ImageIdAndNameDTO {
     private Long imageId;
-    private String imageUrl;
+    private String imageName;
 }

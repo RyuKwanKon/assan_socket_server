@@ -3,6 +3,8 @@ package org.asansocketserver.domain.image.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -15,11 +17,17 @@ public class Coordinate {
     @GeneratedValue
     private Long id;
     @ManyToOne
-    @JoinColumn(name = "image_id")
+    @JoinColumn(name="imageId")
     private Image imageId;
     private String position;
-    private float startX;
-    private float startY;
-    private float endX;
-    private float endY;
+    private String latitude;
+    private String longitude;
+    @Column(precision = 10, scale = 4)
+    private BigDecimal startX;
+    @Column(precision = 10, scale = 4)
+    private BigDecimal  startY;
+    @Column(precision = 10, scale = 4)
+    private BigDecimal  endX;
+    @Column(precision = 10, scale = 4)
+    private BigDecimal  endY;
 }

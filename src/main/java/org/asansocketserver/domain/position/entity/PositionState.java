@@ -13,13 +13,15 @@ import org.springframework.data.redis.core.index.Indexed;
 public class PositionState {
     @Id
     private Long id;
+    private Long imageId;
     @Indexed
     private String position;
     private Long startTime;
 
-    public static PositionState createPositionState(Long watchId, String position, Long startTime) {
+    public static PositionState createPositionState(Long watchId, Long imageId, String position, Long startTime) {
         return PositionState.builder()
                 .id(watchId)
+                .imageId(imageId)
                 .position(position)
                 .startTime(startTime)
                 .build();
