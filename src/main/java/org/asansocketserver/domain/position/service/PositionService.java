@@ -2,7 +2,6 @@ package org.asansocketserver.domain.position.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.position.dto.ResultDataDTO;
@@ -24,6 +23,7 @@ import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -47,7 +47,7 @@ public class PositionService {
     public void insertState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
         PositionState positionState =
-                PositionState.createPositionState(watch.getId(), stateDTO.position(), System.currentTimeMillis());
+                PositionState.createPositionState(watch.getId(),stateDTO.imageId(), stateDTO.position(), System.currentTimeMillis());
         positionStateRepository.save(positionState);
     }
 
@@ -80,7 +80,7 @@ public class PositionService {
         Watch watch = findByWatchOrThrow(posData.android_id());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
         if (!Objects.isNull(positionState))
-            responseDto = addPosData(posData, positionState.getPosition());
+            responseDto = addPosData(posData, positionState.getImageId(),positionState.getPosition());
         else {
             responseDto = findPosition(posData);
             PositionData positionData = PositionData.of(responseDto);
@@ -99,8 +99,9 @@ public class PositionService {
         beaconDataRepository.deleteAll(beaconsByPosition);
     }
 
-    private String addPosData(PosDataDTO posData, String position) {
+    private String addPosData(PosDataDTO posData, Long imageId,String position) {
         BeaconData beaconDataEntity = new BeaconData();
+        beaconDataEntity.setImageId(imageId);
         beaconDataEntity.setPosition(position);
         String beaconDataJson = converBeaconDataDtoToJson(posData.beaconData());
         beaconDataEntity.setBeaconData(beaconDataJson);
