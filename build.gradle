@@ -49,6 +49,13 @@ dependencies {
 
     //swagger (임시)
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+
+//    // iterator util
+//    implementation 'org.apache.commons:commons-collections4:jar:4.1'
+//
+//    // rabbitmq_mqtt
+//    implementation "org.springframework.integration:spring-integration-mqtt:6.2.1"
 }
 
 tasks.named('test') {
