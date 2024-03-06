@@ -1,6 +1,7 @@
 package org.asansocketserver.batch.cdc.step;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.batch.cdc.entity.SensorRow;
 import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
 import org.asansocketserver.domain.sensor.entity.SensorAccelerometer;
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class AccelerometerStep {
@@ -25,6 +27,7 @@ public class AccelerometerStep {
     }
 
     private List<SensorAccelerometer> accelerometerReadTask(Watch watch) {
+        log.info(LocalDate.now().toString());
         return sensorAccelerometerRepository.findAllByWatchIdAndDate(watch.getId(), LocalDate.now());
     }
 
