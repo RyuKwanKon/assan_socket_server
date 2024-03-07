@@ -28,7 +28,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final BeaconDataRepository beaconDataRepository;
 //    public static String UPLOAD_DIR = "C:\\Users\\qkrwo\\uploads\\images\\";
-public static String UPLOAD_DIR = "/app/uploads/images/";
+    public static String UPLOAD_DIR = "/app/uploads/images/";
 
     public ImageResponseDto getImage(Long id)  {
         Optional<Image> image = imageRepository.findById(id);
@@ -58,7 +58,7 @@ public static String UPLOAD_DIR = "/app/uploads/images/";
     public Long saveImage(MultipartFile file) throws IOException {
 
         byte[] bytes = file.getBytes();
-        Path path = Paths.get(UPLOAD_DIR  + "\\" + file.getOriginalFilename());
+        Path path = Paths.get(UPLOAD_DIR   + file.getOriginalFilename());
         Files.write(path, bytes);
 
         Image image = Image.builder().imageUrl("/images/" + file.getOriginalFilename()).imageName("지정되지 않음").build();
