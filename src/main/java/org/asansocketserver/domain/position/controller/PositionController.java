@@ -36,14 +36,8 @@ public class PositionController {
         return SuccessResponse.ok("success");
     }
 
-    @GetMapping("/getMapList")
-    public ResponseEntity<?> getMapList(){
-        List<String> maps = positionService.getMapList();
-        return ResponseEntity.ok(maps);
-    }
-
     @GetMapping("/getCollectionStatus")
-    public ResponseEntity<SuccessResponse<?>> getCollectionStatus(@RequestParam GetStateDTO getStateDTO){
+    public ResponseEntity<SuccessResponse<?>> getCollectionStatus(@RequestBody GetStateDTO getStateDTO){
         return SuccessResponse.ok(positionService.getCollectionState(getStateDTO));
     }
 }
