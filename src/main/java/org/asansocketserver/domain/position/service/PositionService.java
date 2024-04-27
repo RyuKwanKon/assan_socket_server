@@ -149,7 +149,7 @@ public class PositionService {
         }
 //
 
-        System.out.println("knn = " + knn);
+//        System.out.println("knn = " + knn);
 
         for (int i = 0; i < threadNum-1; i++) {
             int start = sliceLen * i;
@@ -225,17 +225,17 @@ public class PositionService {
                 .limit(k)
                 .toList();
 
-        nearestNeighbors.forEach(result ->
-                System.out.println("ID: " + result.getId() + ", Position: " + result.getPosition() +
-                        ", Count: " + result.getCount() + ", Avg: " + result.getAvg() +
-                        ", Ratio: " + result.getRatio()));
+//        nearestNeighbors.forEach(result ->
+//                System.out.println("ID: " + result.getId() + ", Position: " + result.getPosition() +
+//                        ", Count: " + result.getCount() + ", Avg: " + result.getAvg() +
+//                        ", Ratio: " + result.getRatio()));
 
         // 이웃들 중에서 위치별 투표 수 계산
         Map<String, Integer> positionVotes = new HashMap<>();
         for (ResultDataDTO neighbor : nearestNeighbors) {
             String position = neighbor.getPosition();
             positionVotes.put(position, positionVotes.getOrDefault(position, 0) + 1);
-            System.out.println("positionVotes = " + positionVotes);
+//            System.out.println("positionVotes = " + positionVotes);
         }
 
         // 가장 많이 투표된 위치를 찾음
@@ -249,7 +249,7 @@ public class PositionService {
             }
         }
 
-        System.out.println("bestPosition = " + bestPosition);
+//        System.out.println("bestPosition = " + bestPosition);
 
         if (bestPosition != null) {
             for (ResultDataDTO result : nearestNeighbors) {
