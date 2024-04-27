@@ -36,9 +36,9 @@ public class PositionController {
         return SuccessResponse.ok("success");
     }
 
-    @GetMapping("/getCollectionStatus")
-    public ResponseEntity<SuccessResponse<?>> getCollectionStatus(@RequestBody GetStateDTO getStateDTO){
-        return SuccessResponse.ok(positionService.getCollectionState(getStateDTO));
+    @GetMapping("/getCollectionStatus/{id}")
+    public ResponseEntity<SuccessResponse<?>> getCollectionStatus(@PathVariable Long id){
+        return SuccessResponse.ok(positionService.getCollectionState(id));
     }
 }
 

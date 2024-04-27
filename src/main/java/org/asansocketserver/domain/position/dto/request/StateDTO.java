@@ -4,6 +4,7 @@ public record StateDTO(
         String androidId,
 
         Long imageId,
-        String position
+        String position,
+        Long endTime
 ) {
 }
