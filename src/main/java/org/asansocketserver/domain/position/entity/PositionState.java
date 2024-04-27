@@ -17,13 +17,15 @@ public class PositionState {
     @Indexed
     private String position;
     private Long startTime;
+    private Long endTime;
 
-    public static PositionState createPositionState(Long watchId, Long imageId, String position, Long startTime) {
+    public static PositionState createPositionState(Long watchId, Long imageId, String position,Long startTime,Long endTime) {
         return PositionState.builder()
                 .id(watchId)
                 .imageId(imageId)
                 .position(position)
                 .startTime(startTime)
+                .endTime(endTime)
                 .build();
     }
 }

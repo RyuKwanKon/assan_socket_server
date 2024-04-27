@@ -26,8 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
@@ -43,12 +42,20 @@ public class PositionService {
     private final BeaconDataUtil beaconDataUtil;
     private final PositionStateRepository positionStateRepository;
     private final PositionMongoRepository positionMongoRepository;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public void insertState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
         PositionState positionState =
-                PositionState.createPositionState(watch.getId(),stateDTO.imageId(), stateDTO.position(), System.currentTimeMillis());
+                PositionState.createPositionState(watch.getId(), stateDTO.imageId(), stateDTO.position(), System.currentTimeMillis(),stateDTO.endTime());
         positionStateRepository.save(positionState);
+
+        long delay = stateDTO.endTime() - System.currentTimeMillis();
+        if (delay > 0) {
+            scheduler.schedule(() -> {
+                positionStateRepository.deleteById(watch.getId());
+            }, delay, TimeUnit.MILLISECONDS);
+        }
     }
 
     public void deleteState(StateDTO stateDTO) {
@@ -56,24 +63,15 @@ public class PositionService {
         positionStateRepository.deleteById(watch.getId());
     }
 
-    public Long getCollectionState(GetStateDTO getStateDTO) {
-        Watch watch = findByWatchOrThrow(getStateDTO.androidId());
+    public Long getCollectionState(Long androidId) {
+        Watch watch = findByWatchOrThrow(String.valueOf(androidId));
         PositionState positionState = positionStateRepository.findById(watch.getId()).orElse(null);
         if (positionState == null)
             return 0L;
         else
-            return positionState.getStartTime();
+            return positionState.getEndTime();
     }
 
-    public List<String> getMapList() {
-        List<BeaconData> beaconDataList = beaconDataRepository.findAll();
-        TreeSet<String> tmpset = new TreeSet<>();
-        for (BeaconData beaconData : beaconDataList) {
-            tmpset.add(beaconData.getPosition());
-        }
-        List<String> result = new ArrayList<>(tmpset);
-        return result;
-    }
 
     public PositionResponseDto receiveData(PosDataDTO posData) {
         String responseDto;
@@ -86,7 +84,7 @@ public class PositionService {
             PositionData positionData = PositionData.of(responseDto);
             updatePositionData(watch.getId(), positionData);
         }
-        return PositionResponseDto.of(watch.getId(), responseDto);
+        return PositionResponseDto.of(watch.getId(),watch.getName(), responseDto);
     }
 
     private PositionState findByPositionStateOrNull(Long id) {
@@ -100,6 +98,9 @@ public class PositionService {
     }
 
     private String addPosData(PosDataDTO posData, Long imageId,String position) {
+        if (posData.beaconData().isEmpty()){
+            return null;
+        }
         BeaconData beaconDataEntity = new BeaconData();
         beaconDataEntity.setImageId(imageId);
         beaconDataEntity.setPosition(position);
@@ -125,13 +126,32 @@ public class PositionService {
 
     private String findPosition(PosDataDTO data) {
         List<BeaconData> dbDataList = beaconDataRepository.findAll();
+
         List<Future<List<ResultDataDTO>>> futureResults = new ArrayList<>();
+
+        if (data.beaconData().isEmpty()){
+            return null;
+        }
 
         //클라이언트가 제공한 와이파이 데이터와 데이터베이스에 저장된 와이파이 데이터를 빠르게 비교하기 위해 다중 스레딩 사용.
         int threadNum = Runtime.getRuntime().availableProcessors();
         int sliceLen = (int) Math.ceil((double) dbDataList.size()) / threadNum;
+        int knn;
 
-        for (int i = 0; i < threadNum - 1; i++) {
+        if(dbDataList.size() <= 250 ){
+            knn = 3;
+        }else if(dbDataList.size() <= 500 ){
+            knn = 7;
+        }else if(dbDataList.size() <= 750){
+            knn = 11;
+        }else {
+            knn = 15;
+        }
+//
+
+        System.out.println("knn = " + knn);
+
+        for (int i = 0; i < threadNum-1; i++) {
             int start = sliceLen * i;
             int end = Math.min(start + sliceLen, dbDataList.size());
             List<BeaconData> slicedDataList = dbDataList.subList(start, end);
@@ -148,7 +168,7 @@ public class PositionService {
                     }
                 }).collect(Collectors.toList());
 
-        return calcKnn(results, 7);
+        return calcKnn(results, knn);
     }
 
 
@@ -184,7 +204,7 @@ public class PositionService {
         int finalLargestCount = largestCount;
 
         return resultList.stream()
-                .filter(data -> data.getCount() >= finalLargestCount * margin)
+                .filter(data -> data.getCount() >= finalLargestCount * margin)  // * margin)
                 .sorted(Comparator.comparingDouble(ResultDataDTO::getRatio))
                 .collect(Collectors.toList());
     }
@@ -197,16 +217,25 @@ public class PositionService {
                         .thenComparingDouble(ResultDataDTO::getRatio))
                 .toList();
 
+
+
+
         // 가장 가까운 k개의 이웃을 선택
         List<ResultDataDTO> nearestNeighbors = sortedResults.stream()
                 .limit(k)
                 .toList();
+
+        nearestNeighbors.forEach(result ->
+                System.out.println("ID: " + result.getId() + ", Position: " + result.getPosition() +
+                        ", Count: " + result.getCount() + ", Avg: " + result.getAvg() +
+                        ", Ratio: " + result.getRatio()));
 
         // 이웃들 중에서 위치별 투표 수 계산
         Map<String, Integer> positionVotes = new HashMap<>();
         for (ResultDataDTO neighbor : nearestNeighbors) {
             String position = neighbor.getPosition();
             positionVotes.put(position, positionVotes.getOrDefault(position, 0) + 1);
+            System.out.println("positionVotes = " + positionVotes);
         }
 
         // 가장 많이 투표된 위치를 찾음
@@ -219,6 +248,8 @@ public class PositionService {
                 bestPosition = entry.getKey();
             }
         }
+
+        System.out.println("bestPosition = " + bestPosition);
 
         if (bestPosition != null) {
             for (ResultDataDTO result : nearestNeighbors) {
