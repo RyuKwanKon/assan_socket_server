@@ -26,5 +26,6 @@ public class PositionMessageController {
         PositionResponseDto responseDto = positionService.receiveData(request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
         sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.POSITION, responseDto));
+        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.POSITION, responseDto));
     }
 }

@@ -18,6 +18,13 @@ import java.util.List;
 public class PositionController {
     private final PositionService positionService;
 
+
+    @GetMapping("/countBeacon")
+    public ResponseEntity<SuccessResponse<?>> countBeacon() {
+        positionService.countBeacon();
+        return SuccessResponse.ok(positionService.countBeacon());
+    }
+
     @DeleteMapping("/deleteBeacon")
     public ResponseEntity<SuccessResponse<?>> deleteBeacon(PositionDTO positionDTO) {
         positionService.deleteBeacon(positionDTO.getPosition());

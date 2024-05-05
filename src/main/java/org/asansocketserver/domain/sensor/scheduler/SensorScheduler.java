@@ -20,13 +20,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @EnableAsync
 @EnableScheduling
-@Component
+//@Component
 public class SensorScheduler {
     private final WatchLiveRepository watchLiveRepository;
     private final SimpMessageSendingOperations sendingOperations;
 
     @Transactional
-    @Scheduled(cron = "30 * * * * *")
+    @Scheduled(cron = "20 * * * * *")
     public void broadcastWatchList() {
         List<WatchLiveResponseDto> responseDto = findAllWatch();
         sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));

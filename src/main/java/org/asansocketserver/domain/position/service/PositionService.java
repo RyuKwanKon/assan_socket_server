@@ -44,6 +44,10 @@ public class PositionService {
     private final PositionMongoRepository positionMongoRepository;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
+    public Object[]  countBeacon() {
+        return new List[]{beaconDataRepository.findAllBeaconCount()};
+    }
+
     public void insertState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
         PositionState positionState =
@@ -136,17 +140,17 @@ public class PositionService {
         //클라이언트가 제공한 와이파이 데이터와 데이터베이스에 저장된 와이파이 데이터를 빠르게 비교하기 위해 다중 스레딩 사용.
         int threadNum = Runtime.getRuntime().availableProcessors();
         int sliceLen = (int) Math.ceil((double) dbDataList.size()) / threadNum;
-        int knn;
+        int knn = 7;
 
-        if(dbDataList.size() <= 250 ){
-            knn = 3;
-        }else if(dbDataList.size() <= 500 ){
-            knn = 7;
-        }else if(dbDataList.size() <= 750){
-            knn = 11;
-        }else {
-            knn = 15;
-        }
+//        if(dbDataList.size() <= 250 ){
+//            knn = 3;
+//        }else if(dbDataList.size() <= 500 ){
+//            knn = 7;
+//        }else if(dbDataList.size() <= 750){
+//            knn = 11;
+//        }else {
+//            knn = 15;
+//        }
 //
 
 //        System.out.println("knn = " + knn);
@@ -155,7 +159,7 @@ public class PositionService {
             int start = sliceLen * i;
             int end = Math.min(start + sliceLen, dbDataList.size());
             List<BeaconData> slicedDataList = dbDataList.subList(start, end);
-            Future<List<ResultDataDTO>> future = taskExecutor.submit(() -> calPos(slicedDataList, data, 0.6));
+            Future<List<ResultDataDTO>> future = taskExecutor.submit(() -> calPos(slicedDataList, data, 0.4));
             futureResults.add(future);
         }
 

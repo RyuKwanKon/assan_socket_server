@@ -6,6 +6,7 @@ import org.asansocketserver.batch.cdc.entity.SensorData;
 import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
 import org.asansocketserver.domain.position.entity.Position;
 import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
+import org.asansocketserver.domain.sensor.scheduler.SensorScheduler;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
@@ -14,6 +15,7 @@ import org.asansocketserver.socket.error.SocketNotFoundException;
 import org.asansocketserver.socket.error.SocketUnauthorizedException;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -34,7 +36,7 @@ public class StompInterceptor implements ChannelInterceptor {
     private final SensorDataRepository sensorDataRepository;
     private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
-
+    private final SensorScheduler sensorScheduler;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -57,6 +59,9 @@ public class StompInterceptor implements ChannelInterceptor {
             }
             log.info("DISCONNECTED watchId : {}", watchId);
         }
+        sensorScheduler.broadcastWatchList();
+
+
         return message;
     }
 
