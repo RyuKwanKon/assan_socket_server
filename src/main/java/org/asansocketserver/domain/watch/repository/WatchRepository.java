@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface WatchRepository extends JpaRepository<Watch, Long> {
     Optional<Watch> findByUuid(String uuid);
     boolean existsByUuid(String uuid);
+
+    void delete(Watch watch);
 }

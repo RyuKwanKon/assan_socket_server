@@ -22,6 +22,11 @@ public class WatchApiController {
         return SuccessResponse.ok(responseDto);
     }
 
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<SuccessResponse<?>> deleteWatch(@PathVariable("id") final Long id) {
+        return SuccessResponse.ok( watchService.deleteWatch(id));
+    }
+
     @GetMapping("/{uuid}")
     public ResponseEntity<SuccessResponse<?>> findWatch(@PathVariable final String uuid) {
         final WatchResponseDto responseDto = watchService.findWatch(uuid);
