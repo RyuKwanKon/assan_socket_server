@@ -31,17 +31,17 @@ public class SensorApiController {
     @MessageMapping("/barometer")
     public void sendBarometer(@Header("simpSessionAttributes") Map<String, Object> simpSessionAttributes,
                               @Payload final BarometerRequestDto request) {
-        BarometerResponseDto response = sensorService.sendBarometer(simpSessionAttributes, request);
+        sensorService.sendBarometer(simpSessionAttributes, request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
-        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.BAROMETER, response));
+        // sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.BAROMETER, response));
     }
 
     @MessageMapping("/gyroscope")
     public void sendGyroscope(@Header("simpSessionAttributes") Map<String, Object> simpSessionAttributes,
                               @Payload final GyroscopeRequestDto request) {
-        GyroscopeResponseDto response = sensorService.sendGyroscope(simpSessionAttributes, request);
+        sensorService.sendGyroscope(simpSessionAttributes, request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
-        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.GYROSCOPE, response));
+        //sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.GYROSCOPE, response));
     }
 
     @MessageMapping("/heart-rate")
@@ -55,8 +55,8 @@ public class SensorApiController {
     @MessageMapping("/light")
     public void sendLight(@Header("simpSessionAttributes") Map<String, Object> simpSessionAttributes,
                           @Payload final LightRequestDto request) {
-        LightResponseDto response = sensorService.sendLight(simpSessionAttributes, request);
+        sensorService.sendLight(simpSessionAttributes, request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
-        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.LIGHT, response));
+        // sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.LIGHT, response));
     }
 }
