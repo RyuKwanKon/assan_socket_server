@@ -40,20 +40,20 @@ public class SensorService {
         return AccelerometerResponseDto.of(createdAccelerometer);
     }
 
-    public BarometerResponseDto sendBarometer(Map<String, Object> simpSessionAttributes,
+    public void sendBarometer(Map<String, Object> simpSessionAttributes,
                                               BarometerRequestDto barometerRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Barometer barometer = createBarometer(barometerRequestDto);
         createBarometerAndSave(watchId, barometerRequestDto);
-        return BarometerResponseDto.of(barometer);
+//        return BarometerResponseDto.of(barometer);
     }
 
-    public GyroscopeResponseDto sendGyroscope(Map<String, Object> simpSessionAttributes,
+    public void sendGyroscope(Map<String, Object> simpSessionAttributes,
                                               GyroscopeRequestDto gyroscopeRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Gyroscope gyroscope = createGyroscope(gyroscopeRequestDto);
         createGyroscopeAndSave(watchId, gyroscopeRequestDto);
-        return GyroscopeResponseDto.of(gyroscope);
+//        return GyroscopeResponseDto.of(gyroscope);
     }
 
     public HeartRateResponseDto sendHeartRate(Map<String, Object> simpSessionAttributes,
@@ -64,12 +64,12 @@ public class SensorService {
         return HeartRateResponseDto.of(heartRate);
     }
 
-    public LightResponseDto sendLight(Map<String, Object> simpSessionAttributes,
+    public void sendLight(Map<String, Object> simpSessionAttributes,
                                       LightRequestDto lightRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Light light = createLight(lightRequestDto);
         createLightAndSave(watchId, lightRequestDto);
-        return LightResponseDto.of(light);
+//        return LightResponseDto.of(light);
     }
 
     private Long getWatchIdFromSession(Map<String, Object> simpSessionAttributes) {
