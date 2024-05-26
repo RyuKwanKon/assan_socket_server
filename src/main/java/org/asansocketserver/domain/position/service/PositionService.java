@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.position.dto.ResultDataDTO;
-import org.asansocketserver.domain.position.dto.request.BeaconDataDTO;
-import org.asansocketserver.domain.position.dto.request.GetStateDTO;
-import org.asansocketserver.domain.position.dto.request.PosDataDTO;
-import org.asansocketserver.domain.position.dto.request.StateDTO;
+import org.asansocketserver.domain.position.dto.request.*;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
 import org.asansocketserver.domain.position.entity.BeaconData;
 import org.asansocketserver.domain.position.entity.Position;
@@ -21,6 +18,7 @@ import org.asansocketserver.domain.position.util.BeaconDataUtil;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
+
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
 
 import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 
@@ -44,8 +43,12 @@ public class PositionService {
     private final PositionMongoRepository positionMongoRepository;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-    public Object[]  countBeacon() {
-        return new List[]{beaconDataRepository.findAllBeaconCount()};
+
+
+    public List<BeaconCountsDTO> countBeacon() {
+        return beaconDataRepository.findAllBeaconCount().stream()
+                .map(result -> new BeaconCountsDTO((String) result[0], ((Number) result[1]).intValue()))
+                .collect(Collectors.toList());
     }
 
     public void insertState(StateDTO stateDTO) {
@@ -67,13 +70,14 @@ public class PositionService {
         positionStateRepository.deleteById(watch.getId());
     }
 
-    public Long getCollectionState(Long androidId) {
+    public PositionState getCollectionState(Long androidId) {
+
         Watch watch = findByWatchOrThrow(String.valueOf(androidId));
         PositionState positionState = positionStateRepository.findById(watch.getId()).orElse(null);
         if (positionState == null)
-            return 0L;
+            return PositionState.createPositionState(androidId,null,null,null,0L);
         else
-            return positionState.getEndTime();
+            return positionState;
     }
 
 
