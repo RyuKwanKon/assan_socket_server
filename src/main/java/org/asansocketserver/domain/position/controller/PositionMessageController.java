@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @RestController
@@ -20,12 +21,14 @@ public class PositionMessageController {
     private final PositionService positionService;
     private final SimpMessageSendingOperations sendingOperations;
 
+
     @MessageMapping("/position")
     public void sendAccelerometer(@Header("simpSessionAttributes") Map<String, Object> simpSessionAttributes,
                                   @Payload final PosDataDTO request) {
         PositionResponseDto responseDto = positionService.receiveData(request);
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
         sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.POSITION, responseDto));
-        sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.POSITION, responseDto));
     }
+
+
 }
