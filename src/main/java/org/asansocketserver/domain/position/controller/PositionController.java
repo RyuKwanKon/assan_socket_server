@@ -4,6 +4,7 @@ package org.asansocketserver.domain.position.controller;
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.position.dto.PositionDTO;
 import org.asansocketserver.domain.position.dto.request.GetStateDTO;
+import org.asansocketserver.domain.position.dto.request.PositionNameDTO;
 import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.service.PositionService;
 import org.asansocketserver.global.common.SuccessResponse;
@@ -26,8 +27,8 @@ public class PositionController {
     }
 
     @DeleteMapping("/deleteBeacon")
-    public ResponseEntity<SuccessResponse<?>> deleteBeacon(PositionDTO positionDTO) {
-        positionService.deleteBeacon(positionDTO.getPosition());
+    public ResponseEntity<SuccessResponse<?>> deleteBeacon(@RequestBody PositionNameDTO positionNameDTO) {
+        positionService.deleteBeacon(positionNameDTO.getPosition());
         return SuccessResponse.ok("success");
     }
 
