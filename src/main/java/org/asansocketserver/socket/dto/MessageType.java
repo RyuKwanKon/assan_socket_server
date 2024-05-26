@@ -9,6 +9,8 @@ import lombok.Getter;
 public enum MessageType {
     POSITION("POSITION"),
     WATCH_LIST("WATCH_LIST"),
+    NEW_WATCH("NEW_WATCH"),
+    DEL_WATCH("DEL_WATCH"),
     HEART_RATE("HEART_RATE"),
     LOCATION("LOCATION"),
     LIGHT("LIGHT"),
