@@ -26,7 +26,7 @@ public class SensorScheduler {
     private final SimpMessageSendingOperations sendingOperations;
 
     @Transactional
-    @Scheduled(cron = "20 * * * * *")
+    @Scheduled(cron = "30 * * * * *")
     public void broadcastWatchList() {
         List<WatchLiveResponseDto> responseDto = findAllWatch();
         sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
