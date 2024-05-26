@@ -5,15 +5,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
+import org.asansocketserver.domain.watch.dto.response.WatchLiveResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.entity.Watch;
+import org.asansocketserver.domain.watch.entity.WatchLive;
+import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.ConflictException;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
+//import org.asansocketserver.socket.dto.MessageType;
+//import org.asansocketserver.socket.dto.SocketBaseResponse;
+//import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.asansocketserver.socket.dto.MessageType;
+import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.asansocketserver.global.error.ErrorCode.*;
 
@@ -23,7 +33,8 @@ import static org.asansocketserver.global.error.ErrorCode.*;
 @Service
 public class WatchService {
     private final WatchRepository watchRepository;
-
+    private final WatchLiveRepository watchLiveRepository;
+    private final SimpMessageSendingOperations sendingOperations;
     public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
         watch.updateWatch(watchUpdateRequestDto);
@@ -36,6 +47,16 @@ public class WatchService {
         return WatchAllResponseDto.of(watchResponseDtoList);
     }
 
+    public Long deleteWatch(Long id) {
+        Optional<Watch> watch = watchRepository.findById(id);
+        Optional<WatchLive> watchLive = watchLiveRepository.findById(id);
+        watch.ifPresent(watchRepository::delete);
+        watchLive.ifPresent(watchLiveRepository::delete);
+        sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.DEL_WATCH, id));
+        return id;
+    }
+
+
     public WatchResponseDto findWatch(String uuid) {
         Watch watch = findByWatchOrThrow(uuid);
         return WatchResponseDto.of(watch);
@@ -44,6 +65,8 @@ public class WatchService {
     public WatchResponseDto createWatch(WatchRequestDto watchRequestDto) {
         validateDuplicateWatch(watchRequestDto);
         Watch createdWatch = createWatchAndSave(watchRequestDto);
+        Long newWatchId = watchRepository.findByUuid(watchRequestDto.uuid()).get().getId();
+        sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.NEW_WATCH, newWatchId));
         return WatchResponseDto.of(createdWatch);
     }
 
