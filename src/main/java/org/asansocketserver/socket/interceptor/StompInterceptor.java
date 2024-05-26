@@ -13,53 +13,79 @@ import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.socket.error.SocketException;
 import org.asansocketserver.socket.error.SocketNotFoundException;
 import org.asansocketserver.socket.error.SocketUnauthorizedException;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
 
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.asansocketserver.socket.error.SocketErrorCode.*;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class StompInterceptor implements ChannelInterceptor {
+public class StompInterceptor implements ChannelInterceptor  {
     public final static Long monitoringId = 9999999L;
     private final WatchRepository watchRepository;
     private final SensorDataRepository sensorDataRepository;
     private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SensorScheduler sensorScheduler;
+    @Qualifier("taskScheduler")
+    private final TaskScheduler taskScheduler;
+
+    private final Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
+
+
+
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
+
+        log.info("command " + accessor.getCommand());
+
+        if (StompCommand.SUBSCRIBE.equals(command)) {
+            sensorScheduler.broadcastWatchList();
+        }
+
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
+            log.info(watchId.toString());
             setWatchIdFromStompHeader(accessor, watchId);
+
             if (!watchId.equals(monitoringId)) {
                 createWatchLiveAndSave(watchId);
                 createSensorDataAndSave(watchId);
                 createPositionAndSave(watchId);
             }
             log.info("[CONNECT]:: watchId : " + watchId);
+            sensorScheduler.broadcastWatchList();
+
+
+
         } else if (StompCommand.DISCONNECT.equals(command)) {
             Long watchId = (Long) getWatchIdFromStompHeader(accessor);
             if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
                 deleteWatchIdFromStompHeader(accessor);
                 deleteWatchInRedis(watchId);
             }
+            sensorScheduler.broadcastWatchList();
             log.info("DISCONNECTED watchId : {}", watchId);
         }
-        sensorScheduler.broadcastWatchList();
+
 
 
         return message;
@@ -136,5 +162,7 @@ public class StompInterceptor implements ChannelInterceptor {
     private void deleteWatchInRedis(Long watchId) {
         watchLiveRepository.deleteById(watchId);
     }
+
+
 }
 
