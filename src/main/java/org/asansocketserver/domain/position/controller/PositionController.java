@@ -38,7 +38,7 @@ public class PositionController {
         return SuccessResponse.ok("success");
     }
 
-    @PostMapping("/deleteState")
+    @DeleteMapping("/deleteState")
     public ResponseEntity<SuccessResponse<?>> deleteState(@RequestBody StateDTO stateDTO) {
         positionService.deleteState(stateDTO);
         return SuccessResponse.ok("success");
