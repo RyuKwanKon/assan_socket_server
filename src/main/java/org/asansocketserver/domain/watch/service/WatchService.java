@@ -18,6 +18,7 @@ import org.asansocketserver.global.error.exception.EntityNotFoundException;
 //import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.asansocketserver.socket.dto.MessageType;
 import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,9 +36,18 @@ public class WatchService {
     private final WatchRepository watchRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SimpMessageSendingOperations sendingOperations;
+
+
     public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
+        Optional<WatchLive> watchLive = watchLiveRepository.findById(watchId);
+
         watch.updateWatch(watchUpdateRequestDto);
+        watchLive.ifPresent(live -> {live.updateWatchLiveName(watchUpdateRequestDto);
+            watchLiveRepository.save(live);});
+
+        System.out.println("watchUpdateRequestDto.name() = " + watchUpdateRequestDto.name());
+
         return WatchResponseDto.of(watch);
     }
 

@@ -27,7 +27,7 @@ public class AccelerometerStep {
     }
 
     private List<SensorAccelerometer> accelerometerReadTask(Watch watch) {
-        log.info(LocalDate.now().toString());
+//        log.info(LocalDate.now().toString());
         return sensorAccelerometerRepository.findAllByWatchIdAndDate(watch.getId(), LocalDate.now());
     }
 

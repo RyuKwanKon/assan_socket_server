@@ -4,9 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asansocketserver.batch.cdc.entity.SensorData;
 import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
-import org.asansocketserver.domain.position.entity.Position;
-import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
 import org.asansocketserver.domain.sensor.scheduler.SensorScheduler;
+import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
@@ -28,6 +27,7 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.asansocketserver.socket.error.SocketErrorCode.*;
@@ -39,7 +39,7 @@ public class StompInterceptor implements ChannelInterceptor  {
     public final static Long monitoringId = 9999999L;
     private final WatchRepository watchRepository;
     private final SensorDataRepository sensorDataRepository;
-    private final PositionMongoRepository positionMongoRepository;
+//    private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SensorScheduler sensorScheduler;
     @Qualifier("taskScheduler")
@@ -55,7 +55,8 @@ public class StompInterceptor implements ChannelInterceptor  {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
 
-        log.info("command " + accessor.getCommand());
+        
+
 
         if (StompCommand.SUBSCRIBE.equals(command)) {
             sensorScheduler.broadcastWatchList();
@@ -63,27 +64,32 @@ public class StompInterceptor implements ChannelInterceptor  {
 
         if (StompCommand.CONNECT.equals(command)) {
             Long watchId = getWatchByAuthorizationHeader(accessor);
+            System.out.println("watchId = " + watchId);
             log.info(watchId.toString());
             setWatchIdFromStompHeader(accessor, watchId);
 
             if (!watchId.equals(monitoringId)) {
                 createWatchLiveAndSave(watchId);
                 createSensorDataAndSave(watchId);
-                createPositionAndSave(watchId);
+                //createPositionAndSave(watchId);
             }
             log.info("[CONNECT]:: watchId : " + watchId);
+            System.out.println("[CONNECT]:: watchId : " + watchId);
             sensorScheduler.broadcastWatchList();
 
 
 
         } else if (StompCommand.DISCONNECT.equals(command)) {
             Long watchId = (Long) getWatchIdFromStompHeader(accessor);
-            if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
-                deleteWatchIdFromStompHeader(accessor);
-                deleteWatchInRedis(watchId);
+            if (watchId != null) {
+                if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
+                    deleteWatchIdFromStompHeader(accessor);
+                    deleteWatchInRedis(watchId);
+                    sensorScheduler.broadcastWatchList();
+                }
+
+                log.info("DISCONNECTED watchId : {}", watchId);
             }
-            sensorScheduler.broadcastWatchList();
-            log.info("DISCONNECTED watchId : {}", watchId);
         }
 
 
@@ -129,7 +135,14 @@ public class StompInterceptor implements ChannelInterceptor  {
     }
 
     private void createWatchLiveAndSave(Long watchId) {
-        WatchLive watchLive = WatchLive.createWatchLive(watchId);
+        System.out.println("watchId watchId  " + watchId);
+        Optional<Watch> watch = watchRepository.findById(watchId);
+        String watchName = "지정되지않음";
+        if(watch.isPresent()){
+            watchName = watch.get().getName();
+        }
+        System.out.println("watchName = " + watchName);
+        WatchLive watchLive = WatchLive.createWatchLive(watchId,watchName);
         watchLiveRepository.save(watchLive);
     }
 
@@ -139,11 +152,11 @@ public class StompInterceptor implements ChannelInterceptor  {
         sensorDataRepository.save(sensorData);
     }
 
-    private void createPositionAndSave(Long watchId) {
-        if (positionMongoRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        Position position = Position.of(watchId);
-        positionMongoRepository.save(position);
-    }
+//    private void createPositionAndSave(Long watchId) {
+//        if (positionMongoRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
+//        Position position = Position.of(watchId);
+//        positionMongoRepository.save(position);
+//    }
 
     private void validateAuthorizationHeader(String authHeaderValue) {
         if (Objects.isNull(authHeaderValue) || authHeaderValue.isBlank())
@@ -154,7 +167,6 @@ public class StompInterceptor implements ChannelInterceptor  {
         if (!watchRepository.existsById(Long.parseLong(authHeaderValue)))
             throw new SocketNotFoundException(WATCH_NOT_FOUND);
     }
-
     private boolean existWatchInRedis(Long watchId) {
         return watchLiveRepository.existsById(watchId);
     }
