@@ -21,9 +21,13 @@ import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -41,11 +45,10 @@ import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 public class PositionService {
     private final BeaconDataRepository beaconDataRepository;
     private final WatchRepository watchRepository;
-    private final ThreadPoolTaskExecutor taskExecutor;
-    private final BeaconDataUtil beaconDataUtil;
     private final PositionStateRepository positionStateRepository;
     private final PositionMongoRepository positionMongoRepository;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final RestTemplate restTemplate = new RestTemplate();
 
     //    public static String UPLOAD_DIR = "C:\\Users\\AMC-guest\\uploads\\beacon_data\\";
     public static String UPLOAD_DIR = "/Users/parkjaeseok/Desktop/csv/";
@@ -153,19 +156,67 @@ public class PositionService {
     }
 
 
-    public PositionResponseDto receiveData(PosDataDTO posData) {
-        String responseDto;
+
+    @Transactional
+    public PositionResponseDto receiveData(PosDataDTO posData) throws Exception {
+
         Watch watch = findByWatchOrThrow(posData.android_id());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
-        if (!Objects.isNull(positionState))
-            responseDto = addPosData(posData, positionState.getImageId(),positionState.getPosition());
-        else {
-            responseDto = findPosition(posData);
-            PositionData positionData = PositionData.of(responseDto);
-            updatePositionData(watch.getId(), positionData);
+
+        UniqueBSSIDMap baseMap = UniqueBSSIDMap.getInstance();
+        UniqueBSSIDMap uniqueBSSIDMap = new UniqueBSSIDMap();
+
+        String prediction;
+
+        synchronized (baseMap) {
+            uniqueBSSIDMap.copyFrom(baseMap);
+
+            try {
+                // positionState이 null이 아닌 상태는 "비콘 수집" 상태임
+                if (!Objects.isNull(positionState)) {
+                    addPosData(posData, positionState.getImageId(), positionState.getPosition());
+                } else {
+                    for (BeaconDataDTO beaconData : posData.beaconData()) {
+                        System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+                        uniqueBSSIDMap.updateBSSIDMap(beaconData.bssid(), String.valueOf(beaconData.rssi()));
+                    }
+                }
+            } finally {
+                System.out.println("Before copying to baseMap: " + uniqueBSSIDMap.getBSSIDMap());
+                baseMap.copyFrom(uniqueBSSIDMap);
+                System.out.println("After copying to baseMap: " + baseMap.getBSSIDMap());
+
+                prediction = "null";
+                if (!baseMap.getBSSIDMap().isEmpty()) {
+                    prediction = sendUniqueBSSIDMapToFlask(uniqueBSSIDMap);
+                }
+                baseMap.resetBSSIDMapValues();
+
+                System.out.println("After reset: " + baseMap.getBSSIDMap());
+            }
         }
-        return PositionResponseDto.of(watch.getId(),watch.getName(), responseDto);
+
+        if(posData.beaconData().isEmpty()){
+            prediction = "null";
+        }
+        updatePositionData(watch.getId(), PositionData.of(prediction));
+        System.out.println("watchName :" +  watch.getName() + "prediction" + prediction);
+        return PositionResponseDto.of(watch.getId(), watch.getName(), prediction);
     }
+
+    private String sendUniqueBSSIDMapToFlask(UniqueBSSIDMap uniqueBSSIDMap) throws JSONException {
+        String flaskUrl = "http://127.0.0.1:5000/predict";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> bssidMap = uniqueBSSIDMap.getBSSIDMap();
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(bssidMap, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(flaskUrl, HttpMethod.POST, request, String.class);
+        JSONObject jsonResponse = new JSONObject(response.getBody());
+        return jsonResponse.getString("prediction");
+    }
+
 
     private PositionState findByPositionStateOrNull(Long id) {
         return positionStateRepository.findById(id)
@@ -204,143 +255,6 @@ public class PositionService {
     }
 
 
-    private String findPosition(PosDataDTO data) {
-        List<BeaconData> dbDataList = beaconDataRepository.findAll();
-
-        List<Future<List<ResultDataDTO>>> futureResults = new ArrayList<>();
-
-        if (data.beaconData().isEmpty()){
-            return null;
-        }
-
-        //클라이언트가 제공한 와이파이 데이터와 데이터베이스에 저장된 와이파이 데이터를 빠르게 비교하기 위해 다중 스레딩 사용.
-        int threadNum = Runtime.getRuntime().availableProcessors();
-        int sliceLen = (int) Math.ceil((double) dbDataList.size()) / threadNum;
-        int knn = 7;
-
-//        if(dbDataList.size() <= 250 ){
-//            knn = 3;
-//        }else if(dbDataList.size() <= 500 ){
-//            knn = 7;
-//        }else if(dbDataList.size() <= 750){
-//            knn = 11;
-//        }else {
-//            knn = 15;
-//        }
-//
-
-//        System.out.println("knn = " + knn);
-
-        for (int i = 0; i < threadNum-1; i++) {
-            int start = sliceLen * i;
-            int end = Math.min(start + sliceLen, dbDataList.size());
-            List<BeaconData> slicedDataList = dbDataList.subList(start, end);
-            Future<List<ResultDataDTO>> future = taskExecutor.submit(() -> calPos(slicedDataList, data, 0.4));
-            futureResults.add(future);
-        }
-
-        List<ResultDataDTO> results = futureResults.stream()
-                .flatMap(future -> {
-                    try {
-                        return future.get().stream();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new IllegalStateException("Thread interrupted", e);
-                    }
-                }).collect(Collectors.toList());
-
-        return calcKnn(results, knn);
-    }
-
-
-    // 클라이언트의 와이파이 데이터와 데이터베이스의 와이파이 데이터를 비교하여, 가장 가능성이 높은 위치 정보를 담은 리스트를 반환
-    private List<ResultDataDTO> calPos(List<BeaconData> dbDataList, PosDataDTO inputData, double margin) {
-        List<ResultDataDTO> resultList = new ArrayList<>();
-        int largestCount = 0;
-        for (BeaconData dbData : dbDataList) {
-            List<BeaconDataDTO> dbBeaconDataList = beaconDataUtil.parseBeaconData(dbData.getBeaconData());
-            int count = 0;
-            int sum = 0;
-
-            for (BeaconDataDTO dbBeaconData : dbBeaconDataList) {
-                for (BeaconDataDTO inputBeaconData : inputData.beaconData()) {
-                    if (dbBeaconData.bssid().equals(inputBeaconData.bssid())) {
-
-                        count++;
-                        sum += Math.abs(dbBeaconData.rssi() - inputBeaconData.rssi());
-                        break;
-                    }
-                }
-            }
-
-            double avg = count > 0 ? (double) sum / count : Double.MAX_VALUE;
-            double ratio = count > 0 ? avg / count : Double.MAX_VALUE;
-
-
-            resultList.add(new ResultDataDTO(dbData.getId(), dbData.getPosition(), count, avg, ratio));
-            largestCount = Math.max(largestCount, count);
-        }
-
-
-        int finalLargestCount = largestCount;
-
-        return resultList.stream()
-                .filter(data -> data.getCount() >= finalLargestCount * margin)  // * margin)
-                .sorted(Comparator.comparingDouble(ResultDataDTO::getRatio))
-                .collect(Collectors.toList());
-    }
-
-    // calpos 결과값을 기반으로 k개의 이웃값과 비교하여 최적값 반환.
-    private String calcKnn(List<ResultDataDTO> results, int k) {
-        // 결과를 ratio 오름차순으로 정렬
-        List<ResultDataDTO> sortedResults = results.stream()
-                .sorted(Comparator.comparingInt(ResultDataDTO::getCount).reversed()
-                        .thenComparingDouble(ResultDataDTO::getRatio))
-                .toList();
-
-
-
-
-        // 가장 가까운 k개의 이웃을 선택
-        List<ResultDataDTO> nearestNeighbors = sortedResults.stream()
-                .limit(k)
-                .toList();
-
-//        nearestNeighbors.forEach(result ->
-//                System.out.println("ID: " + result.getId() + ", Position: " + result.getPosition() +
-//                        ", Count: " + result.getCount() + ", Avg: " + result.getAvg() +
-//                        ", Ratio: " + result.getRatio()));
-
-        // 이웃들 중에서 위치별 투표 수 계산
-        Map<String, Integer> positionVotes = new HashMap<>();
-        for (ResultDataDTO neighbor : nearestNeighbors) {
-            String position = neighbor.getPosition();
-            positionVotes.put(position, positionVotes.getOrDefault(position, 0) + 1);
-//            System.out.println("positionVotes = " + positionVotes);
-        }
-
-        // 가장 많이 투표된 위치를 찾음
-        String bestPosition = null;
-        int maxVotes = -1;
-
-        for (Map.Entry<String, Integer> entry : positionVotes.entrySet()) {
-            if (entry.getValue() > maxVotes) {
-                maxVotes = entry.getValue();
-                bestPosition = entry.getKey();
-            }
-        }
-
-//        System.out.println("bestPosition = " + bestPosition);
-
-        if (bestPosition != null) {
-            for (ResultDataDTO result : nearestNeighbors) {
-                if (result.getPosition().equals(bestPosition)) {
-                    log.info("[resultHashMap]::" + result.getPosition());
-                    return result.getPosition();
-                }
-            }
-        }
-        return null;
-    }
 
     private Watch findByWatchOrThrow(String id) {
         return watchRepository.findById(Long.parseLong(id))
