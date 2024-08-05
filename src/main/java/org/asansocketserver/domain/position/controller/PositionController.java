@@ -1,6 +1,7 @@
 package org.asansocketserver.domain.position.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.position.dto.PositionDTO;
 import org.asansocketserver.domain.position.dto.request.GetStateDTO;
@@ -24,6 +25,12 @@ public class PositionController {
     public ResponseEntity<SuccessResponse<?>> countBeacon() {
         positionService.countBeacon();
         return SuccessResponse.ok(positionService.countBeacon());
+    }
+
+    @PostMapping("/createCsv")
+    public ResponseEntity<SuccessResponse<?>> createCsv() throws JsonProcessingException {
+        positionService.createCsv();
+        return SuccessResponse.ok("success");
     }
 
     @DeleteMapping("/deleteBeacon")

@@ -1,6 +1,7 @@
 package org.asansocketserver.domain.position.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.asansocketserver.domain.position.mongorepository.PositionMongoReposit
 import org.asansocketserver.domain.position.repository.BeaconDataRepository;
 import org.asansocketserver.domain.position.repository.PositionStateRepository;
 import org.asansocketserver.domain.position.util.BeaconDataUtil;
+import org.asansocketserver.domain.position.util.UniqueBSSIDMap;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
@@ -23,6 +25,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -66,6 +70,72 @@ public class PositionService {
             }, delay, TimeUnit.MILLISECONDS);
         }
     }
+
+    public void createCsv() throws JsonProcessingException {
+        List<BeaconData> beaconDataList = beaconDataRepository.findAll();
+
+        // 데이터를 저장할 Map
+        Map<String, List<Map<String, String>>> data = new HashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // 모든 비콘 데이터를 파싱하여 Map에 저장
+        for (BeaconData reading : beaconDataList) {
+            List<Map<String, String>> beaconDataListToMap = objectMapper.readValue(
+                    reading.getBeaconData(), new TypeReference<List<Map<String, String>>>() {}
+            );
+            String position = reading.getPosition();
+            data.putIfAbsent(position, new ArrayList<>());
+
+            for (Map<String, String> beaconData : beaconDataListToMap) {
+                data.get(position).add(beaconData);
+            }
+        }
+
+        // 유니크한 BSSID를 수집
+        Set<String> uniqueBssids = new TreeSet<>();  // TreeSet을 사용하여 자동으로 정렬
+        for (List<Map<String, String>> beaconDataMapList : data.values()) {
+            for (Map<String, String> beaconData : beaconDataMapList) {
+                uniqueBssids.add(beaconData.get("bssid"));
+            }
+        }
+
+        UniqueBSSIDMap.getInstance().initializeBSSIDMap(uniqueBssids);
+
+        // CSV 파일 생성
+        try (FileWriter writer = new FileWriter(UPLOAD_DIR + "output.csv")) {
+            // 헤더 작성
+            writer.append("Room");
+            for (String bssid : uniqueBssids) {
+                writer.append(",").append(bssid);
+            }
+            writer.append("\n");
+
+            // 데이터 작성
+            for (BeaconData reading : beaconDataList) {
+                String position = reading.getPosition();
+                List<Map<String, String>> beaconDataListToMap = objectMapper.readValue(
+                        reading.getBeaconData(), new TypeReference<List<Map<String, String>>>() {}
+                );
+
+                // 한 행에 대한 데이터를 작성
+                writer.append(position);
+                Map<String, String> bssidToRssiMap = new HashMap<>();
+                for (Map<String, String> beaconData : beaconDataListToMap) {
+                    bssidToRssiMap.put(beaconData.get("bssid"), beaconData.get("rssi"));
+                }
+                for (String bssid : uniqueBssids) {
+                    writer.append(",");
+                    String rssi = bssidToRssiMap.get(bssid);
+                    writer.append(rssi != null ? rssi : "NaN");
+                }
+                writer.append("\n");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     public void deleteState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.androidId());
