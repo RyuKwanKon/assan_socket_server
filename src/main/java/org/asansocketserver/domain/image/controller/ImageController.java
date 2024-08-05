@@ -72,9 +72,8 @@ public class ImageController {
 
     //이미지내에 설정한 위치들과 해당 좌표 목록을 가져오는 api
     @GetMapping("/getPositionAndCoordinateList/{id}")
-    public ResponseEntity<SuccessResponse<?>> getPositionAndCoordinateList(@PathVariable Long id) {
-        List<CoordinateDTO> positionList = imageService.getPositionAndCoordinateList(id);
-        System.out.println("positionList = " + positionList);
+    public ResponseEntity<SuccessResponse<?>> getPositionAndCoordinateList(@PathVariable Long id,@RequestParam("isWeb") Boolean isWeb) {
+        List<CoordinateDTO> positionList = imageService.getPositionAndCoordinateList(id,isWeb);
         return SuccessResponse.ok(positionList);
     }
 

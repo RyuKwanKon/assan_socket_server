@@ -13,5 +13,8 @@ public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
     Coordinate findByImageIdAndPosition(Image image, String position);
 
     Coordinate findByPosition( String position);
-    List<Coordinate> findAllByImageId(Optional<Image> image);
+
+    List<Coordinate> findAllByImageIdAndIsWebFalse(Image image);
+
+    List<Coordinate> findAllByImageIdAndIsWebTrue(Image image);
 }

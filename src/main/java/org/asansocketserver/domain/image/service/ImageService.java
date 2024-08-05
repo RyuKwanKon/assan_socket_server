@@ -135,15 +135,26 @@ public class ImageService {
         coordinateRepository.delete(coordinate);
     }
 
-    public List<CoordinateDTO> getPositionAndCoordinateList(Long id) {
+
+
+    public List<CoordinateDTO> getPositionAndCoordinateList(Long id , Boolean isWeb) {
         Optional<Image> image = imageRepository.findById(id);
-        List<Coordinate> coordinateList = coordinateRepository.findAllByImageId(image);
+        List<Coordinate> coordinateList = null;
+
+        if(image.isPresent()){
+            if(isWeb){
+                coordinateList  = coordinateRepository.findAllByImageIdAndIsWebTrue(image.get());
+            }
+            else{
+                coordinateList  = coordinateRepository.findAllByImageIdAndIsWebFalse(image.get());
+            }
+        }
+
         List<CoordinateDTO> coordinateDTOList = new ArrayList<>();
 
         if (coordinateList.isEmpty()) {
             throw new IllegalArgumentException("해당 이미지의 위치 목록이 존재하지 않습니다");
         } else {
-
             for (Coordinate coordinate : coordinateList) {
                 CoordinateDTO coordinateDTO = new CoordinateDTO();
                 coordinateDTO.setImageId(coordinate.getImageId().getId());
