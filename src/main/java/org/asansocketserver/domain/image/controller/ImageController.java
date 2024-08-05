@@ -19,6 +19,7 @@ import java.util.List;
 public class ImageController {
     private final ImageService imageService;
 
+    // --------------- 공통 ----------------
     //이미지 조회 api
     @GetMapping("/getImage/{id}")
     public ResponseEntity<SuccessResponse<?>> getImage(@PathVariable Long id) {
@@ -29,14 +30,14 @@ public class ImageController {
 
 
 
+    //이미지 목록 조회 api -> RequestParam 추가
     @GetMapping("/getImageList")
-    public ResponseEntity<SuccessResponse<?>> getImageList()  {
-        ImageListDTO responseDto = imageService.getImageList();
-        System.out.println("responseDto = " + responseDto.getImageIds());
+    public ResponseEntity<SuccessResponse<?>> getImageList(@RequestParam("isWeb") Boolean isWeb)  {
+        System.out.println("isWeb = " + isWeb);
+        ImageListDTO responseDto = imageService.getImageList(isWeb);
+//        System.out.println("responseDto = " + responseDto.getImageIds());
         return SuccessResponse.ok(responseDto);
     }
-
-
 
     //이미지 저장 api
     @PostMapping("/saveImage")

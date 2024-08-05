@@ -38,16 +38,27 @@ public class ImageService {
 
 
 
-    public ImageListDTO getImageList() {
-        List<Image> images = imageRepository.findAll();
+    public ImageListDTO getImageList(Boolean isWeb) {
+
         List<Long>  imageIdDtoArrayList = new ArrayList<>();
         List<String>  imageNameDtoArrayList = new ArrayList<>();
+        List<Image> images = null;
 
-        for (Image image : images) {
-            imageIdDtoArrayList.add(image.getId());
-            imageNameDtoArrayList.add(image.getImageName());
-
+        if(!isWeb){
+            images = imageRepository.findAllByIsWebFalse();
+            for (Image image : images) {
+                imageIdDtoArrayList.add(image.getId());
+                imageNameDtoArrayList.add(image.getImageName());
+            }
         }
+        else {
+            images = imageRepository.findAllByIsWebTrue();
+            for (Image image : images) {
+                imageIdDtoArrayList.add(image.getId());
+                imageNameDtoArrayList.add(image.getImageName());
+            }
+        }
+
         ImageListDTO imageListDTO = new ImageListDTO();
         imageListDTO.setImageIds(imageIdDtoArrayList);
         imageListDTO.setImageNames(imageNameDtoArrayList);
