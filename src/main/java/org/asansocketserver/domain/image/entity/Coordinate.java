@@ -30,4 +30,5 @@ public class Coordinate {
     private BigDecimal  endX;
     @Column(precision = 10, scale = 4)
     private BigDecimal  endY;
+    private Boolean isWeb;
 }
