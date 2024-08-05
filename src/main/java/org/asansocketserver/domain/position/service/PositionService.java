@@ -43,7 +43,9 @@ public class PositionService {
     private final PositionMongoRepository positionMongoRepository;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
-
+    //    public static String UPLOAD_DIR = "C:\\Users\\AMC-guest\\uploads\\beacon_data\\";
+    public static String UPLOAD_DIR = "/Users/parkjaeseok/Desktop/csv/";
+//    public static String UPLOAD_DIR = "/app/uploads/beaconCsv/";
 
     public List<BeaconCountsDTO> countBeacon() {
         return beaconDataRepository.findAllBeaconCount().stream()
