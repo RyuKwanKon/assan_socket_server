@@ -5,6 +5,8 @@ import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
 import org.asansocketserver.domain.watch.service.WatchService;
 import org.asansocketserver.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +45,14 @@ public class WatchApiController {
     public ResponseEntity<SuccessResponse<?>> updateWatchInfo(@PathVariable("id") final Long id,
                                                               @RequestBody final WatchUpdateRequestDto requestDto) {
         final WatchResponseDto responseDto = watchService.updateWatchInfo(id, requestDto);
+        return SuccessResponse.created(responseDto);
+    }
+
+    @PostMapping("/web/{id}")
+    public ResponseEntity<SuccessResponse<?>> updateWatchInfoForWeb(@PathVariable("id") final Long id,
+                                                                    @RequestBody final WatchUpdateRequestForWebDto requestDto) {
+        final WatchResponseForWebDto responseDto = watchService.updateWatchInfoForWeb(id, requestDto);
+        System.out.println("responseDto = " + responseDto);
         return SuccessResponse.created(responseDto);
     }
 }

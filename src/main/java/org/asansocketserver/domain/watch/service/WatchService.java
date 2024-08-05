@@ -7,6 +7,8 @@ import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchLiveResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
@@ -68,6 +70,14 @@ public class WatchService {
         Long newWatchId = watchRepository.findByUuid(watchRequestDto.uuid()).get().getId();
         sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.NEW_WATCH, newWatchId));
         return WatchResponseDto.of(createdWatch);
+    }
+
+    public WatchResponseForWebDto updateWatchInfoForWeb(Long watchId, WatchUpdateRequestForWebDto watchUpdateRequestDto) {
+        Watch watch = findByWatchIdOrThrow(watchId);
+        watch.updateWatchForWeb(watchUpdateRequestDto);
+        watchRepository.save(watch);
+        System.out.println("watchUpdateRequestDto.name() = " + watchUpdateRequestDto.name());
+        return WatchResponseForWebDto.of(watch);
     }
 
     private Watch createWatchAndSave(WatchRequestDto watchRequestDto) {
