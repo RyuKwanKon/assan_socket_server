@@ -27,6 +27,8 @@ dependencies {
     implementation 'org.jetbrains:annotations:24.0.0'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.json:json:20210307'
+
 
     // mysql
     runtimeOnly 'com.mysql:mysql-connector-j'
