@@ -55,4 +55,10 @@ public class WatchApiController {
         System.out.println("responseDto = " + responseDto);
         return SuccessResponse.created(responseDto);
     }
+
+    @GetMapping("/web/{uuid}")
+    public ResponseEntity<SuccessResponse<?>> findWatchForWeb(@PathVariable final String uuid) {
+        final WatchResponseForWebDto responseDto = watchService.findWatchForWeb(uuid);
+        return SuccessResponse.ok(responseDto);
+    }
 }

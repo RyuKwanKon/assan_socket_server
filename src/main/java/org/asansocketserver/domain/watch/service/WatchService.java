@@ -64,6 +64,11 @@ public class WatchService {
         return WatchResponseDto.of(watch);
     }
 
+    public WatchResponseForWebDto findWatchForWeb(String uuid) {
+        Watch watch = findByWatchOrThrow(uuid);
+        return WatchResponseForWebDto.of(watch);
+    }
+
     public WatchResponseDto createWatch(WatchRequestDto watchRequestDto) {
         validateDuplicateWatch(watchRequestDto);
         Watch createdWatch = createWatchAndSave(watchRequestDto);
