@@ -17,6 +17,8 @@ public class LabelDataDTO {
     private BigDecimal startY;
     private BigDecimal endX;
     private BigDecimal endY;
+    private Boolean isWeb;
+
 
 
 }

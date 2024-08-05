@@ -174,8 +174,15 @@ public class ImageService {
     }
 
     @Transactional
-    public List<PositionDTO> getPositionList() {
+    public List<PositionDTO> getPositionList(Boolean isWeb) {
         List<Coordinate> coordinateList = coordinateRepository.findAll();
+
+        if(isWeb){
+            coordinateList = coordinateRepository.findAllByIsWebTrue();
+        }else{
+            coordinateList = coordinateRepository.findAllByIsWebFalse();
+        }
+
         List<PositionDTO> positionList = new ArrayList<>();
 
         if (coordinateList.isEmpty()) {

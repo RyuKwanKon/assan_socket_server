@@ -39,13 +39,6 @@ public class ImageController {
         return SuccessResponse.ok(responseDto);
     }
 
-    //이미지 저장 api
-    @PostMapping("/saveImage")
-    public ResponseEntity<SuccessResponse<?>> saveImage(@RequestParam("imageData") MultipartFile file) throws IOException {
-        Long imageId = imageService.saveImage(file);
-        System.out.println("imageId = " + imageId);
-        return SuccessResponse.ok(imageId);
-    }
 
     @PostMapping("/nameChange")
     public ResponseEntity<SuccessResponse<?>> nameChange(@RequestBody ImageIdAndNameDTO imageIdAndNameDTO ) {
@@ -62,10 +55,10 @@ public class ImageController {
     }
 
 
-    //이미지내에 설정한 위치들의 목록을 가져오는 api
+    //이미지내에 설정한 위치들의 이름 목록을 가져오는 api (앱에서 비콘을 모으기 위해 위치 목록을 띄울 경우 사용)
     @GetMapping("/getPositionList")
-    public ResponseEntity<SuccessResponse<?>> getPositionList() {
-        List<PositionDTO> positionList = imageService.getPositionList();
+    public ResponseEntity<SuccessResponse<?>> getPositionList(@RequestParam("isWeb") Boolean isWeb) {
+        List<PositionDTO> positionList = imageService.getPositionList(isWeb);
         return SuccessResponse.ok(positionList);
     }
 
@@ -79,6 +72,7 @@ public class ImageController {
 
 
     //이미지 내 위치 및 범위 생성 api
+    //LabelDataDTO에 isWeb 속성 존재
     @PostMapping("/postImagePositionAndCoordinates")
     public ResponseEntity<SuccessResponse<?>> saveImagePositionAndCoordinates(@RequestBody LabelDataDTO labelDataDTO) {
         imageService.saveImagePositionAndCoordinates(labelDataDTO);
@@ -86,11 +80,26 @@ public class ImageController {
 
     }
 
+
+
+    // --------------- 앱 ----------------
+
+    //이미지 저장 api
+    @PostMapping("/saveImage")
+    public ResponseEntity<SuccessResponse<?>> saveImage(@RequestParam("imageData") MultipartFile file) throws IOException {
+        Long imageId = imageService.saveImage(file);
+        System.out.println("imageId = " + imageId);
+        return SuccessResponse.ok(imageId);
+    }
+
     //이미지 내 위치 및 범위 삭제 api
+
     @DeleteMapping("/deleteImagePositionAndCoordinates/{positionName}")
     public ResponseEntity<SuccessResponse<?>> deleteImagePositionAndCoordinates(@PathVariable String positionName) {
         imageService.deleteImagePositionAndCoordinates(positionName);
         return SuccessResponse.ok(null);
     }
+
+
 }
 

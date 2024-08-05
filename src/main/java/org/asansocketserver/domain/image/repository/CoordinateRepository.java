@@ -17,4 +17,8 @@ public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
     List<Coordinate> findAllByImageIdAndIsWebFalse(Image image);
 
     List<Coordinate> findAllByImageIdAndIsWebTrue(Image image);
+
+    List<Coordinate> findAllByIsWebTrue();
+
+    List<Coordinate> findAllByIsWebFalse();
 }
