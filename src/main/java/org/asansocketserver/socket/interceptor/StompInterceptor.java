@@ -42,20 +42,12 @@ public class StompInterceptor implements ChannelInterceptor  {
     private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SensorScheduler sensorScheduler;
-    @Qualifier("taskScheduler")
-    private final TaskScheduler taskScheduler;
-
-    private final Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
-
-
-
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
 
-        log.info("command " + accessor.getCommand());
 
         if (StompCommand.SUBSCRIBE.equals(command)) {
             sensorScheduler.broadcastWatchList();
