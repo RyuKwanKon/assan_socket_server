@@ -110,6 +110,13 @@ public class ImageController {
         return SuccessResponse.ok(imageId);
     }
 
+    //웹 - 이미지 내 위치 및 범위 삭제 api(웹은 좌표만 삭제)
+    @DeleteMapping("/web/deleteImagePositionAndCoordinates/{coorId}")
+    public ResponseEntity<SuccessResponse<?>> deleteImagePositionAndCoordinatesForWeb(@PathVariable Long coorId) {
+        imageService.deleteImagePositionAndCoordinatesForWeb(coorId);
+        return SuccessResponse.ok(null);
+    }
+
 
 }
 

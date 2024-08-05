@@ -211,6 +211,17 @@ public class ImageService {
         Image savedImage = imageRepository.save(image);
         return savedImage.getId();
     }
+
+    public void deleteImagePositionAndCoordinatesForWeb(Long coorId) {
+        Optional<Coordinate> optionalCoordinate = coordinateRepository.findById(coorId);
+        if (optionalCoordinate.isPresent()) {
+            Coordinate coordinate = optionalCoordinate.get();
+            coordinateRepository.delete(coordinate);
+        } else {
+            // 처리할 오류 또는 예외 던지기
+            throw new IllegalArgumentException("해당 좌표가 존재하지 않습니다.");
+        }
+    }
 }
 
 
