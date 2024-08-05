@@ -23,6 +23,7 @@ public class Image {
     private String imageUrl;
     @OneToMany(mappedBy = "imageId" , orphanRemoval = true)
     private List<Coordinate> coordinateList = new ArrayList<>();
+    private Boolean isWeb;
 
     public void updateName(String imageName) {
         this.imageName = imageName;
