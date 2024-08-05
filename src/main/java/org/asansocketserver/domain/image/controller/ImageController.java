@@ -100,6 +100,16 @@ public class ImageController {
         return SuccessResponse.ok(null);
     }
 
+    // --------------- 웹 ----------------
+
+    //웹 - 이미지 저장 api (flutter-web은 MultipartFile 미지원)
+    @PostMapping("/web/saveImage")
+    public ResponseEntity<SuccessResponse<?>> saveImageForWeb(@RequestBody ImageBase64DTO imageBase64Dto) throws IOException {
+        Long imageId = imageService.saveImageForWeb(imageBase64Dto.getImageData());
+//        System.out.println("imageId = " + imageId);
+        return SuccessResponse.ok(imageId);
+    }
+
 
 }
 

@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -198,6 +199,17 @@ public class ImageService {
             }
         }
         return positionList;
+    }
+
+    public Long saveImageForWeb(String base64Image) throws IOException {
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        String fileName = "image_" + System.currentTimeMillis() + ".jpg";
+        Path path = Paths.get(UPLOAD_DIR + fileName);
+        Files.write(path, imageBytes);
+
+        Image image = Image.builder().imageUrl("/images/" + fileName).imageName("지정되지 않음").isWeb(true).build();
+        Image savedImage = imageRepository.save(image);
+        return savedImage.getId();
     }
 }
 
