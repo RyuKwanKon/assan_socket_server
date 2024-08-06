@@ -117,6 +117,10 @@ public class ImageController {
         return SuccessResponse.ok(null);
     }
 
-
+    @GetMapping("/web/getImageWithPositionNameList")
+    public ResponseEntity<SuccessResponse<?>> getImageWithPositionNameList()  {
+        List<ImageAndCoordinateDTO> responseDto = imageService.getImageAndPositionNameList();
+        return SuccessResponse.ok(responseDto);
+    }
 }
 

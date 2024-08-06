@@ -16,10 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Transactional
@@ -227,11 +224,37 @@ public class ImageService {
     }
 
     public List<ImageAndCoordinateDTO> getImageAndPositionNameList() {
-        List<ImageAndCoordinateDTO> imageAndCoordinateDTOList = new ArrayList<>();
+        List<ImageIDAndNameAndCoordinateDTO> imageAndCoordinateDTOList = imageRepository.findImagesWithCoordinates();
 
-        System.out.println("imageAndCoordinateDTOList = " + imageRepository.findImagesWithCoordinates());
-        return imageAndCoordinateDTOList;
+        Map<Long, ImageAndCoordinateDTO> imageMap = new HashMap<>();
+        List<CoordinateIDAndPositionDTO> positionList = new ArrayList<>();
+
+        ImageAndCoordinateDTO imageWithCoordinates;
+
+        for (ImageIDAndNameAndCoordinateDTO dto : imageAndCoordinateDTOList) {
+            Long imageId = dto.imageId();
+            ImageAndCoordinateDTO imageWithCoordinate = imageMap.get(imageId);
+
+            if (imageWithCoordinate == null) {
+                imageWithCoordinates = ImageAndCoordinateDTO.of(dto.imageId(), dto.imageName(), new ArrayList<>());
+                imageMap.put(dto.imageId(), imageWithCoordinates);
+            }
+
+            CoordinateIDAndPositionDTO coordinateDTO = new CoordinateIDAndPositionDTO();
+            coordinateDTO.setPosition(dto.position());
+            coordinateDTO.setCoordinateId(dto.coordinateId());
+
+            positionList = imageMap.get(dto.imageId()).positionList();
+            positionList.add(coordinateDTO);
+            imageWithCoordinates = ImageAndCoordinateDTO.of(dto.imageId(), dto.imageName(),positionList);
+            imageMap.put(dto.imageId(), imageWithCoordinates);
+
+        }
+
+
+        return new ArrayList<>(imageMap.values());
     }
+
 }
 
 
