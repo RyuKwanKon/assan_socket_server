@@ -17,7 +17,8 @@ public enum MessageType {
     BAROMETER("BAROMETER"),
     GYROSCOPE("GYROSCOPE"),
     ACCELEROMETER("ACCELEROMETER"),
-    PPG_GREEN("PPG_GREEN");
+    PPG_GREEN("PPG_GREEN"),
+    DIS_WATCH("DIS_WATCH");
 
     private final String desc;
 }

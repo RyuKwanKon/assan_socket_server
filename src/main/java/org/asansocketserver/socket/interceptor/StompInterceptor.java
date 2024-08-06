@@ -47,7 +47,7 @@ public class StompInterceptor implements ChannelInterceptor  {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
-
+//        log.info("[command]:: watchId : " + command);
 
         if (StompCommand.SUBSCRIBE.equals(command)) {
             sensorScheduler.broadcastWatchList();
@@ -73,6 +73,7 @@ public class StompInterceptor implements ChannelInterceptor  {
             if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
                 deleteWatchIdFromStompHeader(accessor);
                 deleteWatchInRedis(watchId);
+                sensorScheduler.sendDisconnectWatch(watchId);
             }
             sensorScheduler.broadcastWatchList();
             log.info("DISCONNECTED watchId : {}", watchId);

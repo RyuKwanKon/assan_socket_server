@@ -32,6 +32,11 @@ public class SensorScheduler {
         sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.WATCH_LIST, responseDto));
     }
 
+    public void sendDisconnectWatch(Long watchId) {
+        WatchLiveResponseDto responseDto = WatchLiveResponseDto.of(watchId);
+        sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.DIS_WATCH, responseDto));
+    }
+
     private List<WatchLiveResponseDto> findAllWatch() {
         List<WatchLive> watchLiveList = findAllWatchInRedis();
         return WatchLiveResponseDto.liveListOf(watchLiveList);
