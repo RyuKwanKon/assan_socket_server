@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public record PosDataDTO(
-        String android_id,
+        String watchId,
         String position,
         String password,
         @JsonProperty("beacon_data")
