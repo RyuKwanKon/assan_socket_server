@@ -155,7 +155,7 @@ public class PositionService {
     @Transactional
     public PositionResponseDto receiveData(PosDataDTO posData) throws Exception {
 
-        Watch watch = findByWatchOrThrow(posData.android_id());
+        Watch watch = findByWatchOrThrow(posData.watchId());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
 
         UniqueBSSIDMap baseMap = UniqueBSSIDMap.getInstance();
