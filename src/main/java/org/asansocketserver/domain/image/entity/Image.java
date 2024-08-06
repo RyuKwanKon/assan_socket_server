@@ -21,7 +21,7 @@ public class Image {
     private Long id;
     private String imageName;
     private String imageUrl;
-    @OneToMany(mappedBy = "imageId" , orphanRemoval = true)
+    @OneToMany(mappedBy = "image" , orphanRemoval = true)
     private List<Coordinate> coordinateList = new ArrayList<>();
     private Boolean isWeb;
 

@@ -10,13 +10,13 @@ import java.util.Optional;
 
 
 public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
-    Coordinate findByImageIdAndPosition(Image image, String position);
+    Coordinate findByImageAndPosition(Image image, String position);
 
     Coordinate findByPosition( String position);
 
-    List<Coordinate> findAllByImageIdAndIsWebFalse(Image image);
+    List<Coordinate> findAllByImageAndIsWebFalse(Image image);
 
-    List<Coordinate> findAllByImageIdAndIsWebTrue(Image image);
+    List<Coordinate> findAllByImageAndIsWebTrue(Image image);
 
     List<Coordinate> findAllByIsWebTrue();
 

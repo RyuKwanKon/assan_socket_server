@@ -17,8 +17,8 @@ public class Coordinate {
     @GeneratedValue
     private Long id;
     @ManyToOne
-    @JoinColumn(name="imageId")
-    private Image imageId;
+    @JoinColumn(name="image")
+    private Image image;
     private String position;
     private String latitude;
     private String longitude;
