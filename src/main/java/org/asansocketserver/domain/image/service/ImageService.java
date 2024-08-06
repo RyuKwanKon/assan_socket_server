@@ -35,7 +35,7 @@ public class ImageService {
     public ImageResponseDto getImage(Long id)  {
         Optional<Image> image = imageRepository.findById(id);
         String imageUrl = image.get().getImageUrl();
-        return  ImageResponseDto.of(image.get().getId(),imageUrl);
+        return  ImageResponseDto.of(image.get().getId(),image.get().getImageName(),imageUrl);
     }
 
 
