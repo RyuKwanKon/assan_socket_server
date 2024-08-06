@@ -107,7 +107,7 @@ public class ImageService {
                 new IllegalArgumentException("해당 이미지가 존재하지 않습니다")));
 
 
-        Coordinate existingCoordinate = coordinateRepository.findByImageIdAndPosition(image, labelDataDTO.getPosition());
+        Coordinate existingCoordinate = coordinateRepository.findByImageAndPosition(image, labelDataDTO.getPosition());
 
         if (existingCoordinate != null) {
             throw new IllegalArgumentException("해당 이미지의 위치가 이미 존재합니다.");
@@ -115,14 +115,15 @@ public class ImageService {
         System.out.println("labelDataDTO.getStartX() = " + labelDataDTO.getStartX());
         try {
             Coordinate coordinate = Coordinate.builder()
-                    .imageId(image)
+                    .image(image)
                     .position(labelDataDTO.getPosition())
                     .latitude(labelDataDTO.getLatitude())
                     .longitude(labelDataDTO.getLongitude())
                     .startX(labelDataDTO.getStartX())
                     .startY(labelDataDTO.getStartY())
                     .endX(labelDataDTO.getEndX())
-                    .endY(labelDataDTO.getEndY()).build();
+                    .endY(labelDataDTO.getEndY())
+                    .isWeb(labelDataDTO.getIsWeb()).build();
 
             coordinateRepository.save(coordinate);
         } catch (Exception e) {
@@ -142,24 +143,25 @@ public class ImageService {
     public List<CoordinateDTO> getPositionAndCoordinateList(Long id , Boolean isWeb) {
         Optional<Image> image = imageRepository.findById(id);
         List<Coordinate> coordinateList = null;
+        System.out.println("image.isPresent() = " + image.get().getImageName());
+        System.out.println("isWeb = " + isWeb);
 
         if(image.isPresent()){
             if(isWeb){
-                coordinateList  = coordinateRepository.findAllByImageIdAndIsWebTrue(image.get());
+                coordinateList  = coordinateRepository.findAllByImageAndIsWebTrue(image.get());
+                System.out.println("coordinateList = " + coordinateList);
             }
             else{
-                coordinateList  = coordinateRepository.findAllByImageIdAndIsWebFalse(image.get());
+                coordinateList  = coordinateRepository.findAllByImageAndIsWebFalse(image.get());
             }
         }
 
         List<CoordinateDTO> coordinateDTOList = new ArrayList<>();
 
-        if (coordinateList.isEmpty()) {
-            throw new IllegalArgumentException("해당 이미지의 위치 목록이 존재하지 않습니다");
-        } else {
+        if (!coordinateList.isEmpty()) {
             for (Coordinate coordinate : coordinateList) {
                 CoordinateDTO coordinateDTO = new CoordinateDTO();
-                coordinateDTO.setImageId(coordinate.getImageId().getId());
+                coordinateDTO.setImageId(coordinate.getImage().getId());
                 coordinateDTO.setCoordinateId(coordinate.getId());
                 coordinateDTO.setLatitude(coordinate.getLatitude());
                 coordinateDTO.setLongitude(coordinate.getLongitude());
@@ -177,7 +179,7 @@ public class ImageService {
 
     @Transactional
     public List<PositionDTO> getPositionList(Boolean isWeb) {
-        List<Coordinate> coordinateList = coordinateRepository.findAll();
+        List<Coordinate> coordinateList = null;
 
         if(isWeb){
             coordinateList = coordinateRepository.findAllByIsWebTrue();
@@ -192,7 +194,7 @@ public class ImageService {
         } else {
             for (Coordinate coordinate : coordinateList) {
                 PositionDTO positionDTO = new PositionDTO();
-                positionDTO.setImageId(coordinate.getImageId().getId());
+                positionDTO.setImageId(coordinate.getImage().getId());
                 positionDTO.setCoordinateId(coordinate.getId());
                 positionDTO.setPosition(coordinate.getPosition());
 
@@ -222,6 +224,13 @@ public class ImageService {
             // 처리할 오류 또는 예외 던지기
             throw new IllegalArgumentException("해당 좌표가 존재하지 않습니다.");
         }
+    }
+
+    public List<ImageAndCoordinateDTO> getImageAndPositionNameList() {
+        List<ImageAndCoordinateDTO> imageAndCoordinateDTOList = new ArrayList<>();
+
+        System.out.println("imageAndCoordinateDTOList = " + imageRepository.findImagesWithCoordinates());
+        return imageAndCoordinateDTOList;
     }
 }
 
