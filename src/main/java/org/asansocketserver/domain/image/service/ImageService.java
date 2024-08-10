@@ -71,10 +71,11 @@ public class ImageService {
         Path path = Paths.get(UPLOAD_DIR   + file.getOriginalFilename());
         Files.write(path, bytes);
 
-        Image image = Image.builder().imageUrl("/images/" + file.getOriginalFilename()).imageName("지정되지 않음").build();
+        Image image = Image.builder().imageUrl("/images/" + file.getOriginalFilename()).imageName("지정되지 않음").isWeb(false).build();
         Image saveImage = imageRepository.save(image);
         return saveImage.getId();
     }
+
 
     public Long nameChange(ImageIdAndNameDTO imageIdAndNameDTO) {
 
