@@ -2,19 +2,17 @@ package org.asansocketserver.domain.watch.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.asansocketserver.domain.image.dto.CoordinateIDAndPositionDTO;
-import org.asansocketserver.domain.image.dto.ImageAndCoordinateDTO;
-import org.asansocketserver.domain.image.dto.ImageIDAndNameAndCoordinateDTO;
+import org.asansocketserver.domain.image.entity.Coordinate;
+import org.asansocketserver.domain.image.repository.CoordinateRepository;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
-import org.asansocketserver.domain.watch.dto.response.WatchLiveResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchNoContactedRequestDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchProhibitedCoordinatesUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
 
-import org.asansocketserver.domain.watch.dto.web.response.WatchIdAndNameDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchWithHostDto;
+import org.asansocketserver.domain.watch.dto.web.response.*;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
@@ -42,6 +40,8 @@ public class WatchService {
     private final WatchRepository watchRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SimpMessageSendingOperations sendingOperations;
+    private final CoordinateRepository coordinateRepository;
+
     public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
         watch.updateWatch(watchUpdateRequestDto);
@@ -140,5 +140,53 @@ public class WatchService {
 
     private List<Watch> findAllByWatch() {
         return watchRepository.findAll();
+    }
+
+    @Transactional
+    public WatchNoContactResponseDto updateNoContactWatchList(WatchNoContactedRequestDto requestDto) {
+        Optional<Watch> watchOptional = watchRepository.findById(requestDto.getWatchId());
+        if (watchOptional.isEmpty()) {
+            throw new IllegalArgumentException(requestDto.getWatchId() + "번 워치는 존재하지않습니다.");
+        }
+
+        Watch watch = watchOptional.get();
+        watch.getNoContactWatchList().clear();
+
+        for (Long noContactWatchId : requestDto.getNoContactWatchIds()) {
+            Optional<Watch> noContactWatchOptional = watchRepository.findById(noContactWatchId);
+            if (noContactWatchOptional.isEmpty()) {
+                throw new IllegalArgumentException(requestDto.getWatchId() + "번 워치는 존재하지않아 접촉 금지 대상에 지정할 수 없습니다.");
+            }
+            watch.addNoContactWatch(noContactWatchOptional.get());
+        }
+
+        WatchNoContactResponseDto responseDto = new WatchNoContactResponseDto();
+        responseDto.setWatchId(watch.getId());
+        responseDto.setNoContactWatchIds(requestDto.getNoContactWatchIds());
+
+        return responseDto;
+    }
+
+    public WatchProhibitedCoordinatesUpdateResponseDto updateProhibitedCoordinateList(WatchProhibitedCoordinatesUpdateRequestDto requestDto) {
+        Optional<Watch> watchOptional = watchRepository.findById(requestDto.watchId());
+        if (watchOptional.isEmpty()) {
+            throw new IllegalArgumentException(requestDto.watchId() + "번 워치는 존재하지않습니다.");
+        }
+
+        Watch watch = watchOptional.get();
+        watch.getProhibitedCoordinateList().clear();
+
+        for(Long prohibitedCoordinate : requestDto.prohibitedCoordinatesIds()){
+            Optional<Coordinate> prohibitedCoordinateOptional = coordinateRepository.findById(prohibitedCoordinate);
+            if (prohibitedCoordinateOptional.isEmpty()) {
+                throw new IllegalArgumentException(requestDto.watchId() + "번 위치(좌표)는 존재하지않습니다.");
+            }
+            watch.addProhibitedCoordinate(prohibitedCoordinateOptional.get());
+        }
+
+
+        return WatchProhibitedCoordinatesUpdateResponseDto.of(watch.getId() , requestDto.prohibitedCoordinatesIds());
+
+
     }
 }

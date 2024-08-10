@@ -117,10 +117,12 @@ public class ImageController {
         return SuccessResponse.ok(null);
     }
 
+    //이미지 별로 지정된 위치를 목록으로 전달
     @GetMapping("/web/getImageWithPositionNameList")
     public ResponseEntity<SuccessResponse<?>> getImageWithPositionNameList()  {
         List<ImageAndCoordinateDTO> responseDto = imageService.getImageAndPositionNameList();
         return SuccessResponse.ok(responseDto);
     }
+
 }
 

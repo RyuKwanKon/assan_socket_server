@@ -1,12 +1,15 @@
 package org.asansocketserver.domain.watch.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.asansocketserver.domain.image.dto.ImageAndCoordinateDTO;
+import org.asansocketserver.domain.watch.dto.web.request.WatchNoContactedRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchProhibitedCoordinatesUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchNoContactResponseDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchProhibitedCoordinatesUpdateResponseDto;
 import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
 import org.asansocketserver.domain.watch.dto.web.response.WatchWithHostDto;
 import org.asansocketserver.domain.watch.service.WatchService;
@@ -71,5 +74,18 @@ public class WatchApiController {
     public ResponseEntity<SuccessResponse<?>> getWatchListWithHost()  {
         List<WatchWithHostDto> responseDto = watchService.getWatchWithHost();
         return SuccessResponse.ok(responseDto);
+    }
+
+    @PostMapping("/web/updateNoContactList")
+    public ResponseEntity<SuccessResponse<?>> updateNoContactWatchList(@RequestBody final WatchNoContactedRequestDto requestDto) {
+        WatchNoContactResponseDto responseDto = watchService.updateNoContactWatchList(requestDto);
+        return SuccessResponse.created(responseDto);
+    }
+
+    @PostMapping("/web/updateProhibitedCoordinates")
+    public ResponseEntity<SuccessResponse<?>> updateProhibitedCoordinateList(@RequestBody final WatchProhibitedCoordinatesUpdateRequestDto requestDto) {
+        WatchProhibitedCoordinatesUpdateResponseDto responseDto = watchService.updateProhibitedCoordinateList(requestDto);
+        return SuccessResponse.ok(responseDto);
+
     }
 }

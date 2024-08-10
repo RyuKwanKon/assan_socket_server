@@ -26,8 +26,6 @@ public record WatchResponseForWebDto(
                 .host(watch.getHost())
                 .gender(watch.getGender().toString())
                 .highrisk(watch.getHighRisk().toString())
-                .accessibleAreaList(watch.getAccessibleAreaList())
-                .noContactPatientList(watch.getNoContactPatientList())
                 .build();
     }
 
