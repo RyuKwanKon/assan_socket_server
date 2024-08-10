@@ -8,7 +8,7 @@ import org.asansocketserver.domain.image.entity.Coordinate;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Getter
-@Table(name = "watch_coordinate_restriction")
+@Table(name = "watch_coordinate_prohibition")
 @Entity
 public class WatchCoordinateProhibition {
 
