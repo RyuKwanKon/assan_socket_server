@@ -1,16 +1,20 @@
 package org.asansocketserver.domain.watch.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.asansocketserver.domain.image.dto.ImageAndCoordinateDTO;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
 import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchWithHostDto;
 import org.asansocketserver.domain.watch.service.WatchService;
 import org.asansocketserver.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/watch")
@@ -59,6 +63,13 @@ public class WatchApiController {
     @GetMapping("/web/{uuid}")
     public ResponseEntity<SuccessResponse<?>> findWatchForWeb(@PathVariable final String uuid) {
         final WatchResponseForWebDto responseDto = watchService.findWatchForWeb(uuid);
+        return SuccessResponse.ok(responseDto);
+    }
+
+
+    @GetMapping("/web/getWatchListWithHost")
+    public ResponseEntity<SuccessResponse<?>> getWatchListWithHost()  {
+        List<WatchWithHostDto> responseDto = watchService.getWatchWithHost();
         return SuccessResponse.ok(responseDto);
     }
 }

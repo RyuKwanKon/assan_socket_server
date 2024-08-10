@@ -2,13 +2,19 @@ package org.asansocketserver.domain.watch.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.domain.image.dto.CoordinateIDAndPositionDTO;
+import org.asansocketserver.domain.image.dto.ImageAndCoordinateDTO;
+import org.asansocketserver.domain.image.dto.ImageIDAndNameAndCoordinateDTO;
 import org.asansocketserver.domain.watch.dto.request.WatchRequestDto;
 import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchLiveResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
+
+import org.asansocketserver.domain.watch.dto.web.response.WatchIdAndNameDto;
 import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
+import org.asansocketserver.domain.watch.dto.web.response.WatchWithHostDto;
 import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
@@ -24,8 +30,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.asansocketserver.global.error.ErrorCode.*;
 
@@ -67,6 +72,34 @@ public class WatchService {
     public WatchResponseForWebDto findWatchForWeb(String uuid) {
         Watch watch = findByWatchOrThrow(uuid);
         return WatchResponseForWebDto.of(watch);
+    }
+
+    public List<WatchWithHostDto> getWatchWithHost() {
+        List<Watch> watchList = watchRepository.findAll();
+
+        Map<String, WatchWithHostDto> watchMap = new HashMap<>();
+
+        WatchWithHostDto watchWithHosts;
+
+        List<WatchIdAndNameDto> watchIdAndNameList = new ArrayList<>();
+
+        for (Watch watch : watchList) {
+
+            watchWithHosts = watchMap.get(watch.getName());
+
+            if (watchWithHosts == null) {
+                watchWithHosts = WatchWithHostDto.of(watch.getHost(), new ArrayList<>());
+                watchMap.put(watch.getHost(), watchWithHosts);
+            }
+
+            watchIdAndNameList = watchMap.get(watch.getHost()).watchList();
+            watchIdAndNameList.add(WatchIdAndNameDto.of(watch.getId(), watch.getName()));
+
+            watchWithHosts = WatchWithHostDto.of(watch.getHost(),watchIdAndNameList);
+            watchMap.put(watch.getHost(), watchWithHosts);
+
+        }
+        return new ArrayList<>(watchMap.values());
     }
 
     public WatchResponseDto createWatch(WatchRequestDto watchRequestDto) {
