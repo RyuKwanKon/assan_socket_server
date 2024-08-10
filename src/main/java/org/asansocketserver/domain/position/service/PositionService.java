@@ -56,7 +56,7 @@ public class PositionService {
     }
 
     public void insertState(StateDTO stateDTO) {
-        Watch watch = findByWatchOrThrow(stateDTO.androidId());
+        Watch watch = findByWatchOrThrow(stateDTO.watchId());
         PositionState positionState =
                 PositionState.createPositionState(watch.getId(), stateDTO.imageId(), stateDTO.position(), System.currentTimeMillis(),stateDTO.endTime());
         positionStateRepository.save(positionState);
@@ -134,14 +134,13 @@ public class PositionService {
     }
 
 
-
+    @Transactional
     public void deleteState(StateDTO stateDTO) {
-        Watch watch = findByWatchOrThrow(stateDTO.androidId());
+        Watch watch = findByWatchOrThrow(stateDTO.watchId());
         positionStateRepository.deleteById(watch.getId());
     }
 
     public PositionState getCollectionState(Long androidId) {
-
         Watch watch = findByWatchOrThrow(String.valueOf(androidId));
         PositionState positionState = positionStateRepository.findById(watch.getId()).orElse(null);
         if (positionState == null)
@@ -170,6 +169,7 @@ public class PositionService {
                 // positionState이 null이 아닌 상태는 "비콘 수집" 상태임
                 if (!Objects.isNull(positionState)) {
                     addPosData(posData, positionState.getImageId(), positionState.getPosition());
+
                 } else {
                     for (BeaconDataDTO beaconData : posData.beaconData()) {
                         System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
@@ -227,6 +227,11 @@ public class PositionService {
         if (posData.beaconData().isEmpty()){
             return null;
         }
+
+        for (BeaconDataDTO beaconData : posData.beaconData()) {
+            System.out.println("scaning beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+        }
+
         BeaconData beaconDataEntity = new BeaconData();
         beaconDataEntity.setImageId(imageId);
         beaconDataEntity.setPosition(position);
