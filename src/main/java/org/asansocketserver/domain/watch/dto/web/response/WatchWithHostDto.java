@@ -2,7 +2,6 @@ package org.asansocketserver.domain.watch.dto.web.response;
 
 import lombok.AccessLevel;
 import lombok.Builder;
-import org.asansocketserver.domain.image.dto.CoordinateIDAndPositionDTO;
 
 import java.util.List;
 
