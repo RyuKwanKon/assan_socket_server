@@ -3,12 +3,14 @@ package org.asansocketserver.domain.watch.dto.web.request;
 import java.util.List;
 
 public record WatchUpdateRequestForWebDto(
-        String device,
+        Long watchId,
         String name,
         String host,
         String gender,
-        String highrisk,
-        List<Long> accessibleAreaList,
-        List<Long> noContactPatientList
+        String highRisk,
+        int minHR,
+        int maxHR,
+        List<Long> prohibitedCoordinatesIds,
+        List<Long> noContactWatchIds
 ) {
 }
