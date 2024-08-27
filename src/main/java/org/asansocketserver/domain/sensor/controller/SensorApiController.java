@@ -8,15 +8,16 @@ import org.asansocketserver.domain.sensor.service.SensorService;
 import org.asansocketserver.global.common.SuccessResponse;
 import org.asansocketserver.socket.dto.MessageType;
 import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -31,6 +32,26 @@ public class SensorApiController {
         sensorService.sensorSendState(stateDTO);
         return SuccessResponse.ok("success");
     }
+
+    @PostMapping("/api/sensor/downloadSensorDataAsCsvZip")
+    public ResponseEntity<byte[]> downloadSensorDataAsCsvZip(
+            @RequestBody DownloadRequestDto downloadRequestDto,
+            @RequestParam(defaultValue = "100000") int chunkSize
+    ) throws IOException {
+
+        byte[] zipBytes = sensorService.downloadSensorDataAsCsvZip(downloadRequestDto, chunkSize);
+
+        // HTTP 헤더를 설정하여 ZIP 파일을 클라이언트로 전송할 준비
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "sensorData.zip");
+
+        // HTTP 응답을 생성하여 ZIP 파일을 클라이언트에 반환
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(zipBytes);
+    }
+
 
 
 
@@ -69,4 +90,6 @@ public class SensorApiController {
 //        String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
         // sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.LIGHT, response));
     }
+
+
 }

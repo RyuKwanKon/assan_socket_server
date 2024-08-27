@@ -2,6 +2,12 @@ package org.asansocketserver.domain.sensor.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.batch.cdc.entity.SensorData;
+import org.asansocketserver.batch.cdc.entity.SensorRow;
+import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
+import org.asansocketserver.domain.image.entity.Coordinate;
+import org.asansocketserver.domain.image.repository.CoordinateRepository;
+import org.asansocketserver.domain.notification.service.NotificationService;
 import org.asansocketserver.domain.position.dto.request.StateDTO;
 import org.asansocketserver.domain.position.entity.PositionState;
 import org.asansocketserver.domain.sensor.SensorSendStateRepository;
@@ -24,9 +30,14 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Objects;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.asansocketserver.domain.sensor.entity.sensorType.Accelerometer.createAccelerometer;
 import static org.asansocketserver.domain.sensor.entity.sensorType.Barometer.createBarometer;
@@ -49,7 +60,9 @@ public class SensorService {
     private final WatchRepository watchRepository;
     private final SimpMessageSendingOperations sendingOperations;
     private final RedisTemplate<String, Object> redisTemplate;
-
+    private final CoordinateRepository coordinateRepository;
+    private final NotificationService notificationService;
+    private final SensorDataRepository sensorDataRepository;
     private Watch findByWatchOrThrow(Long id) {
         return watchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(WATCH_UUID_NOT_FOUND));
@@ -59,6 +72,7 @@ public class SensorService {
         return sensorSendStateRepository.findById(id)
                 .orElse(null);
     }
+
 
 
 
@@ -87,7 +101,7 @@ public class SensorService {
     }
 
     public void sendBarometer(Map<String, Object> simpSessionAttributes,
-                                              BarometerRequestDto barometerRequestDto) {
+      BarometerRequestDto barometerRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Barometer barometer = createBarometer(barometerRequestDto);
         createBarometerAndSave(watchId, barometerRequestDto);
@@ -95,7 +109,7 @@ public class SensorService {
     }
 
     public void sendGyroscope(Map<String, Object> simpSessionAttributes,
-                                              GyroscopeRequestDto gyroscopeRequestDto) {
+      GyroscopeRequestDto gyroscopeRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
         Gyroscope gyroscope = createGyroscope(gyroscopeRequestDto);
         createGyroscopeAndSave(watchId, gyroscopeRequestDto);
@@ -103,17 +117,41 @@ public class SensorService {
     }
 
     public void sendHeartRate(Map<String, Object> simpSessionAttributes,
-                                              HeartRateRequestDto heartRateRequestDto) {
+      HeartRateRequestDto heartRateRequestDto) {
         Long watchId = getWatchIdFromSession(simpSessionAttributes);
+        Optional<Watch> watch = watchRepository.findById(watchId);
         HeartRate heartRate = createHeartRate(heartRateRequestDto);
+        String position = watch.get().getCurrentLocation();
+        Optional<Coordinate> coordinate = Optional.empty();
+        Long imageId = null;
+
+        if (position != null && !position.isEmpty()) {
+            coordinate = coordinateRepository.findByPositionAndIsWebTrue(position);
+            if (coordinate.isPresent()) {
+                imageId = coordinate.get().getImage().getId();
+            }
+        }
         createHeartRateAndSave(watchId, heartRateRequestDto);
 
         String destination = "/queue/sensor/" + simpSessionAttributes.get("watchId");
+
+        if (watch.get().getMaxHR() < heartRate.getValue()) {
+
+            sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.HIGH_HEART_RATE, CheckHeartRateDto.of(watchId, watch.get().getName(), watch.get().getHost(), imageId
+                    , watch.get().getCurrentLocation(), "blue", heartRate.getValue())));
+            notificationService.createAndSaveNotification(watch.get(), imageId, position,"HIGH-HEART-RATE");
+        } else if (watch.get().getMinHR() > heartRate.getValue()) {
+            sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.LOW_HEART_RATE, CheckHeartRateDto.of(watchId, watch.get().getName(), watch.get().getHost(), imageId,
+                    watch.get().getCurrentLocation(), "red", heartRate.getValue())));
+            notificationService.createAndSaveNotification(watch.get(), imageId, position,"LOW-HEART-RATE");
+        }
 
         Object sensorSendState = redisTemplate.opsForValue().get("sensorSendState:" + watchId);
 
         if (!Objects.isNull(sensorSendState)) {
             sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.HEART_RATE, HeartRateResponseDto.of(heartRate)));}
+
+
     }
 
     public void sendLight(Map<String, Object> simpSessionAttributes,
@@ -123,6 +161,67 @@ public class SensorService {
         createLightAndSave(watchId, lightRequestDto);
 //        return LightResponseDto.of(light);
     }
+
+
+    public byte[] downloadSensorDataAsCsvZip(DownloadRequestDto downloadRequestDto, int chunkSize) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
+
+        int fileNumber = 1;
+
+        for (int patientId : downloadRequestDto.patientId()) {
+            List<SensorData> sensorDataList = sensorDataRepository.findAllByWatchIdAndDateBetween(
+                    patientId, downloadRequestDto.startDate(), downloadRequestDto.lastDate().plusDays(1)
+            );
+
+            List<SensorRow> allSensorRows = new ArrayList<>();
+            for (SensorData data : sensorDataList) {
+                allSensorRows.addAll(data.getSensorRowList());
+            }
+
+            // 타임스탬프 오름차순으로 정렬
+            allSensorRows.sort(Comparator.comparing(SensorRow::getTimestamp));
+
+            // 청크 단위로 CSV 파일 생성
+            for (int i = 0; i < allSensorRows.size(); i += chunkSize) {
+                int toIndex = Math.min(i + chunkSize, allSensorRows.size());
+
+                StringBuilder csvContent = new StringBuilder();
+                String bom = "\uFEFF"; // UTF-8 BOM 추가
+                csvContent.append(bom);
+                csvContent.append("timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ,barometerValue,heartRateValue,lightValue\n");
+
+                for (int j = i; j < toIndex; j++) {
+                    SensorRow row = allSensorRows.get(j);
+                    csvContent.append(row.getTimestamp()).append(",");
+                    csvContent.append(row.getAccX() != null ? row.getAccX() : "NAN").append(",");
+                    csvContent.append(row.getAccY() != null ? row.getAccY() : "NAN").append(",");
+                    csvContent.append(row.getAccZ() != null ? row.getAccZ() : "NAN").append(",");
+                    csvContent.append(row.getGyroX() != null ? row.getGyroX() : "NAN").append(",");
+                    csvContent.append(row.getGyroY() != null ? row.getGyroY() : "NAN").append(",");
+                    csvContent.append(row.getGyroZ() != null ? row.getGyroZ() : "NAN").append(",");
+                    csvContent.append(row.getBarometerValue() != null ? row.getBarometerValue() : "NAN").append(",");
+                    csvContent.append(row.getHeartRateValue() != null ? row.getHeartRateValue() : "NAN").append(",");
+                    csvContent.append(row.getLightValue() != null ? row.getLightValue() : "NAN").append("\n");
+                }
+
+                String fileName = "sensorData_" + patientId + "_" + fileNumber + ".csv";
+                ZipEntry zipEntry = new ZipEntry(fileName);
+                zipOutputStream.putNextEntry(zipEntry);
+                zipOutputStream.write(csvContent.toString().getBytes(StandardCharsets.UTF_8));
+                zipOutputStream.closeEntry();
+
+                fileNumber++;
+            }
+        }
+
+        // ZIP 스트림을 마무리
+        zipOutputStream.finish();
+        zipOutputStream.close();
+
+        return byteArrayOutputStream.toByteArray();
+    }
+
 
     private Long getWatchIdFromSession(Map<String, Object> simpSessionAttributes) {
         return (Long) simpSessionAttributes.get(SESSION_DATA);
