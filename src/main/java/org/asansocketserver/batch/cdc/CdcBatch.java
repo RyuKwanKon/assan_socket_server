@@ -27,15 +27,15 @@ public class CdcBatch {
     private final LightStep lightStep;
 
     @Transactional
-    @Scheduled(cron = "* * * * * *")
+    @Scheduled(fixedRate = 33)
     public void createSensorDateBatch() {
         List<Watch> watchList = findAllByWatch();
         watchList.forEach(watch -> {
-            accelerometerStep.accelerometerStep(watch);
-            barometerStep.barometerStep(watch);
-            gyroscopeStep.gyroscopeStep(watch);
-            heartRateStep.heartRateStep(watch);
-            lightStep.lightStep(watch);
+            accelerometerStep.execute(watch);
+//            barometerStep.barometerStep(watch);
+//            gyroscopeStep.gyroscopeStep(watch);
+//            heartRateStep.heartRateStep(watch);
+//            lightStep.lightStep(watch);
         });
     }
 
@@ -43,3 +43,5 @@ public class CdcBatch {
         return watchRepository.findAll();
     }
 }
+
+

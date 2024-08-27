@@ -28,7 +28,7 @@ public class CsvWriterBatch {
     private final SensorDataRepository sensorDataRepository;
 
     @Transactional
-    @Scheduled(cron = "0 0 23 * * *")
+    @Scheduled(cron = "0 32 15 * * *")
     public void createCsvTask() {
         LocalDate now = LocalDate.now();
         List<Watch> watchList = findAllByWatch();
@@ -38,23 +38,59 @@ public class CsvWriterBatch {
         });
     }
 
-    private void createAndWriteSensorDataAtCsv(Watch watch, String fileName, LocalDate now) {
+    private void createAndWriteSensorDataAtCsv(Watch watch, String baseFileName, LocalDate now) {
         SensorData sensorData = findSensorDataByWatchIdAndLocalDate(watch, now);
-        try (FileWriter writer = new FileWriter("/bin/home/" + fileName)) {
-            writer.write("timestamp,accX,accY,accZ,barometer,gyroX,gyroY,gyroZ,heartRate,light,position\n");
-            for (SensorRow sensorRow : sensorData.getSensorRowList())
-                writeDataRow(writer, sensorRow);
+        int maxRowsPerFile = 100000;
+        int fileIndex = 0;
+        int currentRow = 0; // 현재 파일에 작성된 행 수
+
+        FileWriter writer = null;
+
+        try {
+            if(sensorData != null) {
+                for (SensorRow sensorRow : sensorData.getSensorRowList()) {
+                    // 새로운 파일이 필요하면 파일을 닫고 새 파일을 엽니다.
+                    if (currentRow % maxRowsPerFile == 0) {
+                        if (writer != null) {
+                            writer.close();
+                        }
+//                        String fileName = "/home/bin/" + baseFileName + "_" + (fileIndex++) + ".csv";
+                        String fileName = "/Users/parkjaeseok/Desktop/" + baseFileName + "_" + (fileIndex++) + ".csv";
+                        writer = new FileWriter(fileName);
+                        writer.write("timestamp,accX,accY,accZ,barometer,gyroX,gyroY,gyroZ,heartRate,light\n");
+                    }
+                    writeDataRow(writer, sensorRow);
+                    currentRow++;
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
+
     private void writeDataRow(FileWriter writer, SensorRow sensorRow) throws IOException {
-        String rowDate = sensorRow.getTimeStamp() + "," + sensorRow.getAccX() + "," + sensorRow.getAccY() + sensorRow.getAccZ() + ","
-                + sensorRow.getBarometerValue() + "," + sensorRow.getGyroX() + "," + sensorRow.getGyroY() + sensorRow.getGyroZ() + ","
-                + sensorRow.getHeartRateValue() + "," + sensorRow.getLightValue() + "," + "position";
-        writer.write(rowDate);
+        String rowDate = sensorRow.getTimestamp() + "," +
+                sensorRow.getAccX() + "," +
+                sensorRow.getAccY() + "," +
+                sensorRow.getAccZ() + "," +
+                sensorRow.getBarometerValue() + "," +
+                sensorRow.getGyroX() + "," +
+                sensorRow.getGyroY() + "," +
+                sensorRow.getGyroZ() + "," +
+                sensorRow.getHeartRateValue() + "," +
+                sensorRow.getLightValue() ;
+        writer.write(rowDate + "\n");
     }
+
 
     private SensorData findSensorDataByWatchIdAndLocalDate(Watch watch, LocalDate localDate) {
         return sensorDataRepository.findByWatchIdAndDate(watch.getId(), localDate);
