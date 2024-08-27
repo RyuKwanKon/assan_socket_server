@@ -31,9 +31,10 @@ public class Watch {
 
     private String host;
 
-    private int minHR = 60;
 
-    private int maxHR = 130;
+    private int minHR;
+
+    private int maxHR;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -41,11 +42,18 @@ public class Watch {
     @Enumerated(EnumType.STRING)
     private HighRisk highRisk;
 
+    private String currentLocation;
+
     @OneToMany(mappedBy = "watch", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WatchCoordinateProhibition> prohibitedCoordinateList = new ArrayList<>();
 
     @OneToMany(mappedBy = "watch", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WatchNoContact> noContactWatchList = new ArrayList<>();
+
+    public void updateCurrentLocation(String currentLocation) {
+        this.currentLocation = currentLocation;
+
+    }
 
     public void addProhibitedCoordinate(Coordinate coordinate) {
         WatchCoordinateProhibition restriction = WatchCoordinateProhibition.createProhibition(this, coordinate);
@@ -78,7 +86,11 @@ public class Watch {
     public void updateWatchForWeb(WatchUpdateRequestForWebDto requestDto) {
         this.name = requestDto.name();
         this.host = requestDto.host();
-        this.gender = Gender.valueOf(requestDto.gender());
-        this.highRisk = HighRisk.valueOf(requestDto.highrisk());
+        if (requestDto.gender().equals("남성")) {
+            this.gender = Gender.M;
+        }else{
+            this.gender = Gender.F;
+        }
+        this.highRisk = HighRisk.valueOf(requestDto.highRisk());
     }
 }
