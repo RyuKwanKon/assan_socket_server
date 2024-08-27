@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
     Coordinate findByImageAndPosition(Image image, String position);
 
-    Coordinate findByPosition( String position);
+    Optional<Coordinate> findByPosition(String position);
 
     List<Coordinate> findAllByImageAndIsWebFalse(Image image);
 
@@ -21,4 +21,6 @@ public interface CoordinateRepository extends JpaRepository<Coordinate, Long> {
     List<Coordinate> findAllByIsWebTrue();
 
     List<Coordinate> findAllByIsWebFalse();
+
+    Optional<Coordinate> findByPositionAndIsWebTrue(String prediction);
 }
