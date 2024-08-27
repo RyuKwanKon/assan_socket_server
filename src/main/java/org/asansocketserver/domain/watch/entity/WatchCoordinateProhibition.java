@@ -1,5 +1,6 @@
 package org.asansocketserver.domain.watch.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.asansocketserver.domain.image.entity.Coordinate;
@@ -18,10 +19,11 @@ public class WatchCoordinateProhibition {
 
     @ManyToOne
     @JoinColumn(name = "watch_id")
+    @JsonIgnore
     private Watch watch;
 
     @ManyToOne
-    @JoinColumn(name = "coordinate_id")
+    @JoinColumn(name = "coordinate_id", nullable = false)
     private Coordinate coordinate;
 
     // 생성 메서드
