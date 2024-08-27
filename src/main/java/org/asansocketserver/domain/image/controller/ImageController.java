@@ -3,6 +3,7 @@ package org.asansocketserver.domain.image.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.image.dto.*;
+import org.asansocketserver.domain.image.enums.CoordinateSetting;
 import org.asansocketserver.domain.image.service.ImageService;
 import org.asansocketserver.domain.position.dto.PositionDTO;
 import org.asansocketserver.global.common.SuccessResponse;
@@ -33,9 +34,13 @@ public class ImageController {
     //이미지 목록 조회 api -> RequestParam 추가
     @GetMapping("/getImageList")
     public ResponseEntity<SuccessResponse<?>> getImageList(@RequestParam("isWeb") Boolean isWeb)  {
-        System.out.println("isWeb = " + isWeb);
         ImageListDTO responseDto = imageService.getImageList(isWeb);
-//        System.out.println("responseDto = " + responseDto.getImageIds());
+        return SuccessResponse.ok(responseDto);
+    }
+
+    @GetMapping("/getImageListForWeb")
+    public ResponseEntity<SuccessResponse<?>> getImageListForWeb(@RequestParam("isWeb") Boolean isWeb)  {
+        ImageListForWebDto responseDto = imageService.getImageListForWeb(isWeb);
         return SuccessResponse.ok(responseDto);
     }
 
@@ -121,6 +126,13 @@ public class ImageController {
     @GetMapping("/web/getImageWithPositionNameList")
     public ResponseEntity<SuccessResponse<?>> getImageWithPositionNameList()  {
         List<ImageAndCoordinateDTO> responseDto = imageService.getImageAndPositionNameList();
+        return SuccessResponse.ok(responseDto);
+    }
+
+    //이미지 좌표별 상태 설정
+    @PostMapping("web/setCoordinateSetting")
+    public ResponseEntity<SuccessResponse<?>> setCoordinateSetting(@RequestBody CoodinateSettingDto coordinateSettingDto) {
+        CoodinateSettingDto responseDto = imageService.setCoordinateSetting(coordinateSettingDto);
         return SuccessResponse.ok(responseDto);
     }
 
