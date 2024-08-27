@@ -3,8 +3,6 @@ package org.asansocketserver.domain.image.dto;
 import lombok.AccessLevel;
 import lombok.Builder;
 
-import java.util.List;
-
 @Builder(access = AccessLevel.PRIVATE)
 public record ImageIDAndNameAndCoordinateDTO(
         Long imageId,
@@ -19,6 +17,6 @@ public record ImageIDAndNameAndCoordinateDTO(
 //                .imageName(imageName)
 //                .position(position)
 //                .build();
-    }
+}
 
 

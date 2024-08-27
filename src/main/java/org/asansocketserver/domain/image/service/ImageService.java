@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.asansocketserver.domain.image.dto.*;
 import org.asansocketserver.domain.image.entity.Coordinate;
 import org.asansocketserver.domain.image.entity.Image;
+import org.asansocketserver.domain.image.enums.CoordinateSetting;
 import org.asansocketserver.domain.image.repository.CoordinateRepository;
 import org.asansocketserver.domain.image.repository.ImageRepository;
 import org.asansocketserver.domain.position.dto.PositionDTO;
@@ -26,6 +27,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final BeaconDataRepository beaconDataRepository;
     public static String UPLOAD_DIR = "/Users/parkjaeseok/Desktop/image/";
+
 //    public static String UPLOAD_DIR = "/app/uploads/images/";
 
 
@@ -62,6 +64,24 @@ public class ImageService {
         imageListDTO.setImageIds(imageIdDtoArrayList);
         imageListDTO.setImageNames(imageNameDtoArrayList);
         return imageListDTO;
+    }
+
+    public ImageListForWebDto getImageListForWeb(Boolean isWeb) {
+
+        List<Long>  imageIdDtoArrayList = new ArrayList<>();
+        List<String>  imageNameDtoArrayList = new ArrayList<>();
+        List<String>  imageUrlDtoArrayList = new ArrayList<>();
+        List<Image> images = null;
+
+
+        images = imageRepository.findAllByIsWebTrue();
+        for (Image image : images) {
+            imageIdDtoArrayList.add(image.getId());
+            imageNameDtoArrayList.add(image.getImageName());
+            imageUrlDtoArrayList.add(image.getImageUrl());
+        }
+
+        return  ImageListForWebDto.of(imageIdDtoArrayList,imageNameDtoArrayList,imageUrlDtoArrayList);
     }
 
 
@@ -131,9 +151,9 @@ public class ImageService {
 
 
     public void deleteImagePositionAndCoordinates(String positionName) {
-        Coordinate coordinate = coordinateRepository.findByPosition(positionName);
+        Optional<Coordinate> coordinate = coordinateRepository.findByPosition(positionName);
         beaconDataRepository.deleteAllByPosition(positionName);
-        coordinateRepository.delete(coordinate);
+        coordinateRepository.delete(coordinate.get());
     }
 
 
@@ -168,6 +188,7 @@ public class ImageService {
                 coordinateDTO.setStartY(coordinate.getStartY());
                 coordinateDTO.setEndX(coordinate.getEndX());
                 coordinateDTO.setEndY(coordinate.getEndY());
+                coordinateDTO.setSetting(String.valueOf(coordinate.getSetting()));
                 coordinateDTOList.add(coordinateDTO);
             }
         }
@@ -241,9 +262,7 @@ public class ImageService {
                 imageMap.put(dto.imageId(), imageWithCoordinates);
             }
 
-            CoordinateIDAndPositionDTO coordinateDTO = new CoordinateIDAndPositionDTO();
-            coordinateDTO.setPosition(dto.position());
-            coordinateDTO.setCoordinateId(dto.coordinateId());
+            CoordinateIDAndPositionDTO coordinateDTO = CoordinateIDAndPositionDTO.of(dto.coordinateId(),dto.position());
 
             positionList = imageMap.get(dto.imageId()).positionList();
             positionList.add(coordinateDTO);
@@ -256,6 +275,29 @@ public class ImageService {
         return new ArrayList<>(imageMap.values());
     }
 
+    public CoodinateSettingDto setCoordinateSetting(CoodinateSettingDto coordinateSettingDto) {
+        Optional<Coordinate> optionalCoordinate = coordinateRepository.findById(coordinateSettingDto.coordinateId());
+
+        if (optionalCoordinate.isPresent()) {
+            Coordinate coordinate = optionalCoordinate.get();
+            String setting = coordinateSettingDto.setting();
+
+            CoordinateSetting coordinateSetting = mapSettingToEnum(setting);
+            coordinate.updateSetting(coordinateSetting);
+
+        }
+
+        return coordinateSettingDto;
+    }
+
+    private CoordinateSetting mapSettingToEnum(String setting) {
+        return switch (setting) {
+            case "MAN" -> CoordinateSetting.MAN;
+            case "FEMALE" -> CoordinateSetting.FEMALE;
+            case "PROHIBITION" -> CoordinateSetting.PROHIBITION;
+            default -> null;
+        };
+    }
 }
 
 
