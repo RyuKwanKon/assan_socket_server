@@ -6,6 +6,7 @@ import java.util.List;
 
 public record PosDataDTO(
         String watchId,
+        Long imageId,
         String position,
         String password,
         @JsonProperty("beacon_data")
