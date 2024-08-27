@@ -10,13 +10,17 @@ public record PositionResponseDto(
         Long watchId,
         String watchName,
         LocalDateTime currentTime,
+        Long imageId,
+        String color,
         String position
 ) {
-    public static PositionResponseDto of(Long watchId,String watchName,String date) {
+    public static PositionResponseDto of(Long watchId,String watchName,Long imageId,String color,String date) {
         return PositionResponseDto.builder()
                 .watchId(watchId)
                 .watchName(watchName)
                 .currentTime(LocalDateTime.now())
+                .imageId(imageId)
+                .color(color)
                 .position(date)
                 .build();
     }
