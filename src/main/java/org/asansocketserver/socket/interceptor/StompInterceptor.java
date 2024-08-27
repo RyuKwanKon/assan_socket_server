@@ -7,6 +7,7 @@ import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
 import org.asansocketserver.domain.position.entity.Position;
 import org.asansocketserver.domain.position.mongorepository.PositionMongoRepository;
 import org.asansocketserver.domain.sensor.scheduler.SensorScheduler;
+import org.asansocketserver.domain.watch.entity.Watch;
 import org.asansocketserver.domain.watch.entity.WatchLive;
 import org.asansocketserver.domain.watch.repository.WatchLiveRepository;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
@@ -14,6 +15,9 @@ import org.asansocketserver.socket.error.SocketException;
 import org.asansocketserver.socket.error.SocketNotFoundException;
 import org.asansocketserver.socket.error.SocketUnauthorizedException;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -28,7 +32,9 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.asansocketserver.socket.error.SocketErrorCode.*;
 
@@ -42,6 +48,7 @@ public class StompInterceptor implements ChannelInterceptor  {
     private final PositionMongoRepository positionMongoRepository;
     private final WatchLiveRepository watchLiveRepository;
     private final SensorScheduler sensorScheduler;
+    private final CacheManager cacheManager;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -73,6 +80,20 @@ public class StompInterceptor implements ChannelInterceptor  {
             if (existWatchInRedis(watchId) && !watchId.equals(monitoringId)) {
                 deleteWatchIdFromStompHeader(accessor);
                 deleteWatchInRedis(watchId);
+
+                Cache cache = cacheManager.getCache("notifications");
+                if (cache instanceof ConcurrentMapCache) {
+                    ConcurrentMap<Object, Object> nativeCache = ((ConcurrentMapCache) cache).getNativeCache();
+                    nativeCache.keySet().removeIf(key -> key.toString().matches("^" + watchId + ":.*"));
+                }
+
+
+                Optional<Watch> watch = watchRepository.findById(watchId);
+                watch.ifPresent(value -> {
+                    value.updateCurrentLocation(null);
+                    watchRepository.save(value);
+                });
+
                 sensorScheduler.sendDisconnectWatch(watchId);
             }
             sensorScheduler.broadcastWatchList();
@@ -155,6 +176,8 @@ public class StompInterceptor implements ChannelInterceptor  {
     private void deleteWatchInRedis(Long watchId) {
         watchLiveRepository.deleteById(watchId);
     }
+
+
 
 
 }
