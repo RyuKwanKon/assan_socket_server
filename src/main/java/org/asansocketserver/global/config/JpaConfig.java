@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = "org.asansocketserver.domain.*.repository")
+//@EnableJpaRepositories(basePackages = "org.asansocketserver.domain.*.mongorepository")
 @Configuration
 public class JpaConfig {
 }
