@@ -5,7 +5,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.domain.image.entity.Coordinate;
+import org.asansocketserver.domain.image.repository.CoordinateRepository;
+import org.asansocketserver.domain.notification.dto.request.NotificationRequestDto;
+import org.asansocketserver.domain.notification.entity.Notification;
+import org.asansocketserver.domain.notification.mongorepository.NotificationMongoRepository;
+import org.asansocketserver.domain.notification.service.NotificationService;
 import org.asansocketserver.domain.position.dto.request.*;
+import org.asansocketserver.domain.position.dto.response.CheckContactionDto;
+import org.asansocketserver.domain.position.dto.response.CheckGenderDto;
+import org.asansocketserver.domain.position.dto.response.CheckProhibitionDto;
 import org.asansocketserver.domain.position.dto.response.PositionResponseDto;
 import org.asansocketserver.domain.position.entity.BeaconData;
 import org.asansocketserver.domain.position.entity.PositionData;
@@ -15,17 +24,25 @@ import org.asansocketserver.domain.position.repository.BeaconDataRepository;
 import org.asansocketserver.domain.position.repository.PositionStateRepository;
 import org.asansocketserver.domain.position.util.UniqueBSSIDMap;
 import org.asansocketserver.domain.watch.entity.Watch;
+import org.asansocketserver.domain.watch.entity.WatchCoordinateProhibition;
+import org.asansocketserver.domain.watch.entity.WatchNoContact;
 import org.asansocketserver.domain.watch.repository.WatchRepository;
 import org.asansocketserver.global.error.exception.EntityNotFoundException;
+import org.asansocketserver.socket.dto.MessageType;
+import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.hibernate.annotations.Check;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.*;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -40,10 +57,13 @@ import static org.asansocketserver.global.error.ErrorCode.WATCH_UUID_NOT_FOUND;
 public class PositionService {
     private final BeaconDataRepository beaconDataRepository;
     private final WatchRepository watchRepository;
+    private final CoordinateRepository coordinateRepository;
     private final PositionStateRepository positionStateRepository;
     private final PositionMongoRepository positionMongoRepository;
+    private final NotificationService notificationService;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final RestTemplate restTemplate = new RestTemplate();
+    private final SimpMessageSendingOperations sendingOperations;
 
     //    public static String UPLOAD_DIR = "C:\\Users\\AMC-guest\\uploads\\beacon_data\\";
     public static String UPLOAD_DIR = "/Users/parkjaeseok/Desktop/csv/";
@@ -100,7 +120,10 @@ public class PositionService {
         UniqueBSSIDMap.getInstance().initializeBSSIDMap(uniqueBssids);
 
         // CSV 파일 생성
-        try (FileWriter writer = new FileWriter(UPLOAD_DIR + "output.csv")) {
+        try (FileWriter writer = new FileWriter(UPLOAD_DIR + "output.csv", StandardCharsets.UTF_8)) {
+            // UTF-8 BOM 추가
+            writer.write("\uFEFF");
+
             // 헤더 작성
             writer.append("Room");
             for (String bssid : uniqueBssids) {
@@ -131,10 +154,10 @@ public class PositionService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
+}
 
 
-    @Transactional
+        @Transactional
     public void deleteState(StateDTO stateDTO) {
         Watch watch = findByWatchOrThrow(stateDTO.watchId());
         positionStateRepository.deleteById(watch.getId());
@@ -152,15 +175,15 @@ public class PositionService {
 
 
     @Transactional
-    public PositionResponseDto receiveData(PosDataDTO posData) throws Exception {
+    public PositionResponseDto receiveData(PosDataDTO posData, String destination) throws Exception {
 
         Watch watch = findByWatchOrThrow(posData.watchId());
         PositionState positionState = findByPositionStateOrNull(watch.getId());
-
         UniqueBSSIDMap baseMap = UniqueBSSIDMap.getInstance();
         UniqueBSSIDMap uniqueBSSIDMap = new UniqueBSSIDMap();
 
         String prediction;
+        Long imageId = null;
 
         synchronized (baseMap) {
             uniqueBSSIDMap.copyFrom(baseMap);
@@ -187,17 +210,132 @@ public class PositionService {
                 }
                 baseMap.resetBSSIDMapValues();
 
+                try {
+                    imageId = coordinateRepository.findByPositionAndIsWebTrue(prediction)
+                            .orElseThrow(() -> new NoSuchElementException("No coordinate found for the given prediction"))
+                            .getImage()
+                            .getId();
+                    System.out.println("imageId = " + imageId);
+                } catch (NoSuchElementException e) {
+                    System.out.println("Image ID could not be retrieved: " + e.getMessage());
+                    // 예외 발생 시 추가적인 로직을 여기에 작성
+                }
+                System.out.println("imageId = " + imageId);
                 System.out.println("After reset: " + baseMap.getBSSIDMap());
             }
         }
 
+
+
         if(posData.beaconData().isEmpty()){
             prediction = "null";
         }
+        watch.updateCurrentLocation(prediction);
         updatePositionData(watch.getId(), PositionData.of(prediction));
-        System.out.println("watchName :" +  watch.getName() + "prediction" + prediction);
-        return PositionResponseDto.of(watch.getId(), watch.getName(), prediction);
+
+        System.out.println("watchName : " +  watch.getName() + " prediction : " + prediction);
+        String color = "null";
+
+        if(imageId != null){
+        String genderColor = checkGender(destination, watch, imageId, prediction);
+        if (genderColor != null && !genderColor.isEmpty()) {
+            color = genderColor;
+        }
+
+        String contactColor = checkContaction(destination, watch, imageId, prediction);
+        if (contactColor != null && !contactColor.isEmpty()) {
+            color = contactColor;
+        }
+
+        String prohibitionColor = checkProhibition(destination, watch, imageId, prediction);
+        if (prohibitionColor != null && !prohibitionColor.isEmpty()) {
+            color = prohibitionColor;
+        }}
+
+
+
+        return PositionResponseDto.of(watch.getId(), watch.getName(), imageId, color ,prediction);
     }
+
+    private String checkProhibition(String destination, Watch watch, Long imageId ,String prediction) {
+        List<WatchCoordinateProhibition> watchCoordinateProhibitionList = watch.getProhibitedCoordinateList();
+
+        for (WatchCoordinateProhibition watchCoordinateProhibition : watchCoordinateProhibitionList) {
+
+            if (watchCoordinateProhibition.getCoordinate().getPosition().equals(prediction)) {
+                sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.PROHIBITION,
+                        CheckProhibitionDto.of(watch.getId(), imageId, watch.getName(),watch.getHost(), prediction)));
+
+                notificationService.createAndSaveNotification(watch, imageId, prediction,"PROHIBITION");
+                return "red";
+            }
+        }
+
+        return null ;
+    }
+
+    private String checkContaction(String destination, Watch watch,Long imageId, String prediction) {
+        List<WatchNoContact> watchNoContactList = watch.getNoContactWatchList();
+        for (WatchNoContact watchNoContact : watchNoContactList) {
+            String noContactLocation = watchNoContact.getNoContactWatch().getCurrentLocation();
+
+            if (prediction.equals(noContactLocation)) {
+                String contactedWatchName = watchNoContact.getNoContactWatch().getName();
+                sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.CONTACTION,
+                        CheckContactionDto.of(watch.getId(), imageId, watch.getName(),watch.getHost(),contactedWatchName,prediction)));
+
+                notificationService.createAndSaveNotification(watch, imageId, prediction ,"CONTACTION");
+                return "yellow";
+            }
+        }
+        return null;
+    }
+
+    private String checkGender(String destination, Watch watch, Long imageId, String prediction) {
+        Optional<Coordinate> coordinateOpt = coordinateRepository.findByPositionAndIsWebTrue(prediction);
+
+        if (coordinateOpt.isPresent()) {
+            Coordinate coord = coordinateOpt.get();
+            String coordinateSetting = String.valueOf(coord.getSetting());
+            String genderRestriction = getGenderRestriction(coordinateSetting);
+
+            if (genderRestriction != null && shouldSendAlert(String.valueOf(watch.getGender()), genderRestriction)) {
+                sendAlert(destination, watch, imageId, prediction);
+                return "yellow";
+            }
+        }
+        return null;
+    }
+
+    private String getGenderRestriction(String coordinateSetting) {
+        switch (coordinateSetting.toUpperCase()) {
+            case "MAN":
+                return "M";
+            case "FEMALE":
+                return "F";
+            case "PROHIBITION":
+                return "금지";
+            default:
+                return null;
+        }
+    }
+
+    private boolean shouldSendAlert(String watchGender, String genderRestriction) {
+        return genderRestriction.equals("금지") || !watchGender.equalsIgnoreCase(genderRestriction);
+    }
+
+    private void sendAlert(String destination, Watch watch, Long imageId, String prediction) {
+        sendingOperations.convertAndSend(destination,
+                SocketBaseResponse.of(
+                        MessageType.GENDER,
+                        CheckGenderDto.of(watch.getId(),imageId, watch.getName(),watch.getHost(), prediction)
+                )
+        );
+        notificationService.createAndSaveNotification(watch, imageId, prediction,"GENDER");
+    }
+
+
+
 
     private String sendUniqueBSSIDMapToFlask(UniqueBSSIDMap uniqueBSSIDMap) throws JSONException {
         String flaskUrl = "http://127.0.0.1:5000/predict";
@@ -224,7 +362,9 @@ public class PositionService {
     }
 
     private String addPosData(PosDataDTO posData, Long imageId,String position) {
+        System.out.println("posData = " + posData);
         if (posData.beaconData().isEmpty()){
+
             return null;
         }
 
@@ -264,6 +404,9 @@ public class PositionService {
     private void updatePositionData(Long watchId, PositionData position) {
         positionMongoRepository.updatePosition(watchId, position);
     }
+
+
+
 }
 
 
