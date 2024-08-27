@@ -18,7 +18,6 @@ import java.util.List;
 @Document(collection = "sensor_accelerometer")
 public class SensorAccelerometer {
     @Id
-    @Field(name = "_id")
     private String id;
     @Field(name = "date")
     private LocalDate date;
@@ -37,7 +36,7 @@ public class SensorAccelerometer {
         return SensorAccelerometer.builder()
                 .date(LocalDate.now())
                 .watchId(watchId)
-                .timestamp(accelerometerRequestDto.timeStamp())
+                .timestamp(accelerometerRequestDto.timestamp())
                 .accX(accelerometerRequestDto.accX())
                 .accY(accelerometerRequestDto.accY())
                 .accZ(accelerometerRequestDto.accZ())

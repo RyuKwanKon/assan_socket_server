@@ -9,12 +9,12 @@ import org.asansocketserver.domain.sensor.dto.request.HeartRateRequestDto;
 @Builder(access = AccessLevel.PRIVATE)
 public class HeartRate {
     private Integer value;
-    private String timeStamp;
+    private String timestamp;
 
     public static HeartRate createHeartRate(HeartRateRequestDto requestDto) {
         return HeartRate.builder()
                 .value(requestDto.value())
-                .timeStamp(requestDto.timeStamp().toString())
+                .timestamp(requestDto.timestamp().toString())
                 .build();
     }
 }

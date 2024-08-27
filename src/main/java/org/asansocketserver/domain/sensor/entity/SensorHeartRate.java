@@ -18,7 +18,6 @@ import java.util.List;
 @Document(collection = "sensor_heart_rate")
 public class SensorHeartRate {
     @Id
-    @Field(name = "_id")
     private String id;
     @Field(name = "date")
     private LocalDate date;
@@ -26,15 +25,15 @@ public class SensorHeartRate {
     private Long watchId;
     @Field(name = "value")
     private Integer value;
-    @Field(name = "timeStamp")
-    private Long timeStamp;
+    @Field(name = "timestamp")
+    private Long timestamp;
 
     public static SensorHeartRate createSensor(Long watchId, HeartRateRequestDto heartRateRequestDto) {
         return SensorHeartRate.builder()
                 .date(LocalDate.now())
                 .watchId(watchId)
                 .value(heartRateRequestDto.value())
-                .timeStamp(heartRateRequestDto.timeStamp())
+                .timestamp(heartRateRequestDto.timestamp())
                 .build();
     }
 }

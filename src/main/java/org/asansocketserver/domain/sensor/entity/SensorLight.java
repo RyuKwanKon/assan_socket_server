@@ -18,7 +18,6 @@ import java.util.List;
 @Document(collection = "sensor_light")
 public class SensorLight {
     @Id
-    @Field(name = "_id")
     private String id;
     @Field(name = "date")
     private LocalDate date;
@@ -26,15 +25,15 @@ public class SensorLight {
     private Long watchId;
     @Field(name = "value")
     private Integer value;
-    @Field(name = "timeStamp")
-    private Long timeStamp;
+    @Field(name = "timestamp")
+    private Long timestamp;
 
     public static SensorLight createSensor(Long watchId, LightRequestDto lightRequestDto) {
         return SensorLight.builder()
                 .date(LocalDate.now())
                 .watchId(watchId)
                 .value(lightRequestDto.value())
-                .timeStamp(lightRequestDto.timeStamp())
+                .timestamp(lightRequestDto.timestamp())
                 .build();
     }
 }

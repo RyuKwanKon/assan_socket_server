@@ -11,4 +11,8 @@ public interface SensorHeartRateRepository extends MongoRepository<SensorHeartRa
     boolean existsByWatchIdAndDate(Long watchId, LocalDate date);
 
     List<SensorHeartRate> findAllByWatchIdAndDate(Long watchId, LocalDate date);
+
+    List<SensorHeartRate> findAllByWatchIdAndDateBetween(int patientId, LocalDate localDate, LocalDate localDate1);
+
+    SensorHeartRate findTopByWatchIdAndDateOrderByTimestampDesc(Long id, LocalDate now);
 }

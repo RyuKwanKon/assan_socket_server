@@ -18,7 +18,6 @@ import java.util.List;
 @Document(collection = "sensor_barometer")
 public class SensorBarometer {
     @Id
-    @Field(name = "_id")
     private String id;
     @Field(name = "date")
     private LocalDate date;
@@ -34,7 +33,7 @@ public class SensorBarometer {
                 .date(LocalDate.now())
                 .watchId(watchId)
                 .value(barometerRequestDto.value())
-                .timestamp(barometerRequestDto.timeStamp())
+                .timestamp(barometerRequestDto.timestamp())
                 .build();
     }
 }

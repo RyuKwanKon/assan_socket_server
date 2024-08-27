@@ -9,12 +9,12 @@ import org.asansocketserver.domain.sensor.dto.request.BarometerRequestDto;
 @Builder(access = AccessLevel.PRIVATE)
 public class Barometer {
     private Float value;
-    private String timeStamp;
+    private String timestamp;
 
     public static Barometer createBarometer(BarometerRequestDto requestDto) {
         return Barometer.builder()
                 .value(requestDto.value())
-                .timeStamp(requestDto.timeStamp().toString())
+                .timestamp(requestDto.timestamp().toString())
                 .build();
     }
 }

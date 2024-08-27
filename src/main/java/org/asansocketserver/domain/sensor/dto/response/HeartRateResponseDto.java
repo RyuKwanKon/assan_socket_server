@@ -12,7 +12,7 @@ public record HeartRateResponseDto(
     public static HeartRateResponseDto of(HeartRate heartRate) {
         return HeartRateResponseDto.builder()
                 .value(heartRate.getValue())
-                .timeStamp(heartRate.getTimeStamp())
+                .timeStamp(heartRate.getTimestamp())
                 .build();
     }
 }
