@@ -14,6 +14,7 @@ public class PositionState {
     @Id
     private Long id;
     private Long imageId;
+    private Long coordinateId;
     @Indexed
     private String position;
     private Long startTime;

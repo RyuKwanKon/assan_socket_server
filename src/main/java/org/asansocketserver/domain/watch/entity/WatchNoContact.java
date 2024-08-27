@@ -1,5 +1,6 @@
 package org.asansocketserver.domain.watch.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ public class WatchNoContact {
 
     @ManyToOne
     @JoinColumn(name = "watch_id")
+    @JsonIgnore
     private Watch watch;
 
     @ManyToOne
