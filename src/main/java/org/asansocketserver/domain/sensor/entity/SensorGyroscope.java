@@ -19,7 +19,6 @@ import java.util.List;
 @Document(collection = "sensor_gyroscope")
 public class SensorGyroscope {
     @Id
-    @Field(name = "_id")
     private String id;
     @Field(name = "date")
     private LocalDate date;
@@ -31,8 +30,8 @@ public class SensorGyroscope {
     private Float gyroY;
     @Field(name = "gyroZ")
     private Float gyroZ;
-    @Field(name = "timeStamp")
-    private Long timeStamp;
+    @Field(name = "timestamp")
+    private Long timestamp;
 
     public static SensorGyroscope createSensor(Long watchId, GyroscopeRequestDto gyroscopeRequestDto) {
         return SensorGyroscope.builder()
@@ -41,7 +40,7 @@ public class SensorGyroscope {
                 .gyroX(gyroscopeRequestDto.gyroX())
                 .gyroY(gyroscopeRequestDto.gyroY())
                 .gyroZ(gyroscopeRequestDto.gyroZ())
-                .timeStamp(gyroscopeRequestDto.timeStamp())
+                .timestamp(gyroscopeRequestDto.timestamp())
                 .build();
     }
 }

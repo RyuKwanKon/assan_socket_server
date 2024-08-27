@@ -8,7 +8,7 @@ import org.asansocketserver.domain.sensor.entity.*;
 @Getter
 @Builder(access = AccessLevel.PRIVATE)
 public class SensorRow {
-    private String timeStamp;
+    private String timestamp;
     private Float accX;
     private Float accY;
     private Float accZ;
@@ -19,11 +19,11 @@ public class SensorRow {
     private Integer heartRateValue;
     private Integer lightValue;
 
-    public static SensorRow of(String timeStamp, Float accX, Float accY, Float accZ,
+    public static SensorRow of(String timestamp, Float accX, Float accY, Float accZ,
                                Float barometerValue, Float gyroX, Float gyroY, Float gyroZ,
                                Integer heartRateValue, Integer lightValue) {
         return SensorRow.builder()
-                .timeStamp(timeStamp)
+                .timestamp(timestamp)
                 .accX(accX)
                 .accY(accY)
                 .accZ(accZ)
@@ -38,7 +38,7 @@ public class SensorRow {
 
     public static SensorRow accelerometerOf(SensorAccelerometer sensorAccelerometer) {
         return SensorRow.builder()
-                .timeStamp(sensorAccelerometer.getTimestamp().toString())
+                .timestamp(sensorAccelerometer.getTimestamp().toString())
                 .accX(sensorAccelerometer.getAccX())
                 .accY(sensorAccelerometer.getAccY())
                 .accZ(sensorAccelerometer.getAccZ())
@@ -47,14 +47,14 @@ public class SensorRow {
 
     public static SensorRow barometerOf(SensorBarometer sensorBarometer) {
         return SensorRow.builder()
-                .timeStamp(sensorBarometer.getTimestamp().toString())
+                .timestamp(sensorBarometer.getTimestamp().toString())
                 .barometerValue(sensorBarometer.getValue())
                 .build();
     }
 
     public static SensorRow gyroscopeOf(SensorGyroscope sensorGyroscope) {
         return SensorRow.builder()
-                .timeStamp(sensorGyroscope.getTimeStamp().toString())
+                .timestamp(sensorGyroscope.getTimestamp().toString())
                 .gyroX(sensorGyroscope.getGyroX())
                 .gyroY(sensorGyroscope.getGyroY())
                 .gyroZ(sensorGyroscope.getGyroZ())
@@ -63,15 +63,17 @@ public class SensorRow {
 
     public static SensorRow heartRateOf(SensorHeartRate sensorHeartRate) {
         return SensorRow.builder()
-                .timeStamp(sensorHeartRate.getTimeStamp().toString())
+                .timestamp(sensorHeartRate.getTimestamp().toString())
                 .heartRateValue(sensorHeartRate.getValue())
                 .build();
     }
 
     public static SensorRow lightOf(SensorLight sensorLight) {
         return SensorRow.builder()
-                .timeStamp(sensorLight.getTimeStamp().toString())
+                .timestamp(sensorLight.getTimestamp().toString())
                 .lightValue(sensorLight.getValue())
                 .build();
     }
+
+
 }

@@ -67,7 +67,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private boolean isContainsSensorRow(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
 
         SensorData result = mongoTemplate.findOne(query, SensorData.class);
         return Objects.isNull(result);
@@ -76,7 +76,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private void updateAccelerometerValue(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
         Update update = new Update()
                 .set("sensorRowList.$.accX", sensorRow.getAccX())
                 .set("sensorRowList.$.accY", sensorRow.getAccY())
@@ -87,7 +87,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private void updateBarometerValue(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
         Update update = new Update()
                 .set("sensorRowList.$.barometerValue", sensorRow.getBarometerValue());
         mongoTemplate.updateFirst(query, update, SensorData.class);
@@ -96,7 +96,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private void updateGyroscopeValue(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
         Update update = new Update()
                 .set("sensorRowList.$.gyroX", sensorRow.getGyroX())
                 .set("sensorRowList.$.gyroY", sensorRow.getGyroY())
@@ -107,7 +107,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private void updateHeartRateValue(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
         Update update = new Update()
                 .set("sensorRowList.$.heartRateValue", sensorRow.getHeartRateValue());
         mongoTemplate.updateFirst(query, update, SensorData.class);
@@ -116,7 +116,7 @@ public class SensorDataRepositoryCustomImpl implements SensorDataRepositoryCusto
     private void updateLightValue(Watch watch, SensorRow sensorRow) {
         Query query = new Query(Criteria.where("watchId").is(watch.getId())
                 .and("date").is(LocalDate.now())
-                .and("sensorRowList.timeStamp").is(sensorRow.getTimeStamp()));
+                .and("sensorRowList.timeStamp").is(sensorRow.getTimestamp()));
         Update update = new Update()
                 .set("sensorRowList.$.lightValue", sensorRow.getLightValue());
         mongoTemplate.updateFirst(query, update, SensorData.class);

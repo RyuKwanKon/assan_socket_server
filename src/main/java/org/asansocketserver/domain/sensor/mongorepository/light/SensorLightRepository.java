@@ -12,4 +12,9 @@ public interface SensorLightRepository extends MongoRepository<SensorLight, Stri
     boolean existsByWatchIdAndDate(Long watchId, LocalDate date);
 
     List<SensorLight> findAllByWatchIdAndDate(Long watchId, LocalDate date);
+
+    List<SensorLight> findAllByWatchIdAndDateBetween(int patientId, LocalDate localDate, LocalDate localDate1);
+
+
+    SensorLight findTopByWatchIdAndDateOrderByTimestampDesc(Long id, LocalDate now);
 }

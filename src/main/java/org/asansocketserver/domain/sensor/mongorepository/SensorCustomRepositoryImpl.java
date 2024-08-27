@@ -46,7 +46,7 @@ public class SensorCustomRepositoryImpl implements SensorCustomRepository {
 
     @Override
     public void updateHeartRate(final Long watchId, final HeartRate heartRate) {
-        System.out.println(heartRate.getTimeStamp());
+        System.out.println(heartRate.getTimestamp());
         Query query = new Query();
         Update update = new Update();
         query.addCriteria(Criteria.where("date").is(LocalDate.now())

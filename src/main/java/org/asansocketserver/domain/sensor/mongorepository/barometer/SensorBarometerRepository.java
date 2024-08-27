@@ -9,4 +9,8 @@ import java.util.List;
 
 public interface SensorBarometerRepository extends MongoRepository<SensorBarometer, String>, SensorBarometerCustomRepository {
     List<SensorBarometer> findAllByWatchIdAndDate(Long watchId, LocalDate date);
+
+    List<SensorBarometer> findAllByWatchIdAndDateBetween(int patientId, LocalDate localDate, LocalDate localDate1);
+
+    SensorBarometer findTopByWatchIdAndDateOrderByTimestampDesc(Long id, LocalDate now);
 }
