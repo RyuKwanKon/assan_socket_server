@@ -8,10 +8,7 @@ import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchProhibitedCoordinatesUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchNoContactResponseDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchProhibitedCoordinatesUpdateResponseDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchResponseForWebDto;
-import org.asansocketserver.domain.watch.dto.web.response.WatchWithHostDto;
+import org.asansocketserver.domain.watch.dto.web.response.*;
 import org.asansocketserver.domain.watch.service.WatchService;
 import org.asansocketserver.global.common.SuccessResponse;
 import org.springframework.http.ResponseEntity;
@@ -55,13 +52,26 @@ public class WatchApiController {
         return SuccessResponse.created(responseDto);
     }
 
-    @PostMapping("/web/{id}")
-    public ResponseEntity<SuccessResponse<?>> updateWatchInfoForWeb(@PathVariable("id") final Long id,
-                                                                    @RequestBody final WatchUpdateRequestForWebDto requestDto) {
-        final WatchResponseForWebDto responseDto = watchService.updateWatchInfoForWeb(id, requestDto);
+    @PostMapping("/web/updateWatchInfoForWeb")
+    public ResponseEntity<SuccessResponse<?>> updateWatchInfoForWeb(@RequestBody final WatchUpdateRequestForWebDto requestDto) {
+        final WatchResponseForWebDto responseDto = watchService.updateWatchInfoForWeb(requestDto);
         System.out.println("responseDto = " + responseDto);
         return SuccessResponse.created(responseDto);
     }
+
+
+    @GetMapping("/web")
+    public ResponseEntity<SuccessResponse<?>> findAllWatchForWeb() {
+        final WatchAllResponseForWebDto responseDto = watchService.findAllWatchForWeb();
+        return SuccessResponse.ok(responseDto);
+    }
+
+    @GetMapping("/web/getWatch/{watchId}")
+    public ResponseEntity<SuccessResponse<?>> findWatchByIdForWeb(@PathVariable  Long watchId) {
+        final WatchResponseForWebDto responseDto = watchService.findWatchByIdForWeb(watchId);
+        return SuccessResponse.ok(responseDto);
+    }
+
 
     @GetMapping("/web/{uuid}")
     public ResponseEntity<SuccessResponse<?>> findWatchForWeb(@PathVariable final String uuid) {
@@ -70,22 +80,16 @@ public class WatchApiController {
     }
 
 
-    @GetMapping("/web/getWatchListWithHost")
-    public ResponseEntity<SuccessResponse<?>> getWatchListWithHost()  {
-        List<WatchWithHostDto> responseDto = watchService.getWatchWithHost();
+    @GetMapping("/web/getWatchForNoContact")
+    public ResponseEntity<SuccessResponse<?>> getWatchForNoContact()  {
+        List<WatchIdAndNameDto> responseDto = watchService.getWatchForNoContact();
         return SuccessResponse.ok(responseDto);
     }
 
-    @PostMapping("/web/updateNoContactList")
-    public ResponseEntity<SuccessResponse<?>> updateNoContactWatchList(@RequestBody final WatchNoContactedRequestDto requestDto) {
-        WatchNoContactResponseDto responseDto = watchService.updateNoContactWatchList(requestDto);
-        return SuccessResponse.created(responseDto);
-    }
-
-    @PostMapping("/web/updateProhibitedCoordinates")
-    public ResponseEntity<SuccessResponse<?>> updateProhibitedCoordinateList(@RequestBody final WatchProhibitedCoordinatesUpdateRequestDto requestDto) {
-        WatchProhibitedCoordinatesUpdateResponseDto responseDto = watchService.updateProhibitedCoordinateList(requestDto);
+    @GetMapping("/web/getNoContactAndProhibitedIdWithName/{watchId}")
+    public ResponseEntity<SuccessResponse<?>> getNoContactAndProhibitedIdWithName(@PathVariable Long watchId)  {
+        NoContactAndProhibitedIdWithNameDto responseDto = watchService.getNoContactAndProhibitedIdWithName(watchId);
         return SuccessResponse.ok(responseDto);
-
     }
+
 }
