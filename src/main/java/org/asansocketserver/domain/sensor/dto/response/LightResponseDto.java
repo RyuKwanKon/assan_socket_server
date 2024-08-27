@@ -7,12 +7,12 @@ import org.asansocketserver.domain.sensor.entity.sensorType.Light;
 @Builder(access = AccessLevel.PRIVATE)
 public record LightResponseDto(
         Integer value,
-        String timeStamp
+        String timestamp
 ) {
     public static LightResponseDto of(Light light) {
         return LightResponseDto.builder()
                 .value(light.getValue())
-                .timeStamp(light.getTimeStamp())
+                .timestamp(light.getTimeStamp())
                 .build();
     }
 }

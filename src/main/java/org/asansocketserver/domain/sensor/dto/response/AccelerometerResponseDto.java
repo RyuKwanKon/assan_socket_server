@@ -9,14 +9,14 @@ public record AccelerometerResponseDto(
         Float accX,
         Float accY,
         Float accZ,
-        String timeStamp
+        String timestamp
 ) {
     public static AccelerometerResponseDto of(Accelerometer accelerometer) {
         return AccelerometerResponseDto.builder()
                 .accX(accelerometer.getAccX())
                 .accY(accelerometer.getAccY())
                 .accZ(accelerometer.getAccZ())
-                .timeStamp(accelerometer.getTimeStamp())
+                .timestamp(accelerometer.getTimestamp())
                 .build();
     }
 }

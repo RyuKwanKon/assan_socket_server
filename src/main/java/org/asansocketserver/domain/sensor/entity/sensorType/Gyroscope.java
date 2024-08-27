@@ -11,14 +11,14 @@ public class Gyroscope {
     private Float gyroX;
     private Float gyroY;
     private Float gyroZ;
-    private String timeStamp;
+    private String timestamp;
 
     public static Gyroscope createGyroscope(GyroscopeRequestDto requestDto) {
         return Gyroscope.builder()
                 .gyroX(requestDto.gyroX())
                 .gyroY(requestDto.gyroY())
                 .gyroZ(requestDto.gyroZ())
-                .timeStamp(requestDto.timeStamp().toString())
+                .timestamp(requestDto.timestamp().toString())
                 .build();
     }
 }

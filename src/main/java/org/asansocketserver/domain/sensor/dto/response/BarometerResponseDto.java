@@ -7,12 +7,12 @@ import org.asansocketserver.domain.sensor.entity.sensorType.Barometer;
 @Builder(access = AccessLevel.PRIVATE)
 public record BarometerResponseDto(
         Float value,
-        String timeStamp
+        String timestamp
 ) {
     public static BarometerResponseDto of(Barometer barometer) {
         return BarometerResponseDto.builder()
                 .value(barometer.getValue())
-                .timeStamp(barometer.getTimeStamp())
+                .timestamp(barometer.getTimestamp())
                 .build();
     }
 }

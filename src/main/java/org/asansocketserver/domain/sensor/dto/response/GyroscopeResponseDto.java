@@ -9,14 +9,14 @@ public record GyroscopeResponseDto(
         Float gyroX,
         Float gyroY,
         Float gyroZ,
-        String timeStamp
+        String timestamp
 ) {
     public static GyroscopeResponseDto of(Gyroscope gyroscope) {
         return GyroscopeResponseDto.builder()
                 .gyroX(gyroscope.getGyroX())
                 .gyroY(gyroscope.getGyroY())
                 .gyroZ(gyroscope.getGyroZ())
-                .timeStamp(gyroscope.getTimeStamp())
+                .timestamp(gyroscope.getTimestamp())
                 .build();
     }
 }

@@ -4,6 +4,6 @@ public record AccelerometerRequestDto(
         Float accX,
         Float accY,
         Float accZ,
-        Long timeStamp
+        Long timestamp
 ) {
 }

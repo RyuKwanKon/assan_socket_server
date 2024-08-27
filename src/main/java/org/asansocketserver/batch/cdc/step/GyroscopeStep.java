@@ -3,6 +3,7 @@ package org.asansocketserver.batch.cdc.step;
 import lombok.RequiredArgsConstructor;
 import org.asansocketserver.batch.cdc.entity.SensorRow;
 import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
+import org.asansocketserver.domain.sensor.entity.SensorAccelerometer;
 import org.asansocketserver.domain.sensor.entity.SensorGyroscope;
 import org.asansocketserver.domain.sensor.mongorepository.Gyroscope.SensorGyroscopeRepository;
 import org.asansocketserver.domain.watch.entity.Watch;
@@ -51,5 +52,11 @@ public class GyroscopeStep {
                 .map(SensorGyroscope::getId)
                 .collect(Collectors.toList());
         sensorGyroscopeRepository.deleteAllGyroscopes(sensorGyroscopeIds);
+    }
+
+    public SensorGyroscope getLatestGyroscopeData(Watch watch) {
+        // 주어진 Watch ID와 현재 날짜에 해당하는 가장 최신의 Accelerometer 데이터를 가져옵니다.
+        return sensorGyroscopeRepository
+                .findTopByWatchIdAndDateOrderByTimestampDesc(watch.getId(), LocalDate.now());
     }
 }
