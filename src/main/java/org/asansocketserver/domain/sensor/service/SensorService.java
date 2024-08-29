@@ -178,11 +178,9 @@ public class SensorService {
             Optional<List<Watch>> watchList = Optional.ofNullable(watchRepository.findAllByName(patientName));
             
             for( Watch watch : watchList.get()){
-                System.out.println("watch = " + watch.getName());
                 List<SensorData> sensorDataList = sensorDataRepository.findAllByNameAndDateBetween(
                         watch.getName(), downloadRequestDto.startDate().minusDays(1), downloadRequestDto.lastDate().plusDays(1)
                 );
-                System.out.println("sensorDataList = " + sensorDataList);
 
                 List<SensorRow> allSensorRows = new ArrayList<>();
                 for (SensorData data : sensorDataList) {

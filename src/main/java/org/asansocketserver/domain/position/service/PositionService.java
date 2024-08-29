@@ -195,14 +195,14 @@ public class PositionService {
 
                 } else {
                     for (BeaconDataDTO beaconData : posData.beaconData()) {
-                        System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+//                        System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
                         uniqueBSSIDMap.updateBSSIDMap(beaconData.bssid(), String.valueOf(beaconData.rssi()));
                     }
                 }
             } finally {
-                System.out.println("Before copying to baseMap: " + uniqueBSSIDMap.getBSSIDMap());
+//                System.out.println("Before copying to baseMap: " + uniqueBSSIDMap.getBSSIDMap());
                 baseMap.copyFrom(uniqueBSSIDMap);
-                System.out.println("After copying to baseMap: " + baseMap.getBSSIDMap());
+//                System.out.println("After copying to baseMap: " + baseMap.getBSSIDMap());
 
                 prediction = "null";
                 if (!baseMap.getBSSIDMap().isEmpty()) {
@@ -215,7 +215,7 @@ public class PositionService {
                             .orElseThrow(() -> new NoSuchElementException("No coordinate found for the given prediction"))
                             .getImage()
                             .getId();
-                    System.out.println("imageId = " + imageId);
+
                 } catch (NoSuchElementException e) {
                     System.out.println("Image ID could not be retrieved: " + e.getMessage());
                     // 예외 발생 시 추가적인 로직을 여기에 작성
@@ -233,12 +233,11 @@ public class PositionService {
         watch.updateCurrentLocation(prediction);
         updatePositionData(watch.getId(), PositionData.of(prediction));
 
-        System.out.println("watchName : " +  watch.getName() + " prediction : " + prediction);
+//        System.out.println("watchName : " +  watch.getName() + " prediction : " + prediction);
         String color = "null";
 
         if(imageId != null){
         String genderColor = checkGender(destination, watch, imageId, prediction);
-            System.out.println("genderColor = " + genderColor);
         if (genderColor != null && !genderColor.isEmpty()) {
             color = genderColor;
         }
@@ -254,7 +253,6 @@ public class PositionService {
         }}
 
 
-        System.out.println("color = " + color);
         return PositionResponseDto.of(watch.getId(), watch.getName(), imageId, color ,prediction);
     }
 
@@ -358,7 +356,7 @@ public class PositionService {
 
 
     private String sendUniqueBSSIDMapToFlask(UniqueBSSIDMap uniqueBSSIDMap) throws JSONException {
-        String flaskUrl = "http://127.0.0.1:5000/predict";
+        String flaskUrl = "http://192.168.37.213:5000/predict";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -382,15 +380,15 @@ public class PositionService {
     }
 
     private String addPosData(PosDataDTO posData, Long imageId,String position) {
-        System.out.println("posData = " + posData);
+
         if (posData.beaconData().isEmpty()){
 
             return null;
         }
 
-        for (BeaconDataDTO beaconData : posData.beaconData()) {
-            System.out.println("scaning beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
-        }
+//        for (BeaconDataDTO beaconData : posData.beaconData()) {
+//            System.out.println("scaning beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+//        }
 
         BeaconData beaconDataEntity = new BeaconData();
         beaconDataEntity.setImageId(imageId);

@@ -136,8 +136,6 @@ public class ImageService {
 //            throw new IllegalArgumentException("중복 이름의 위치가 존재합니다.");
 //        }
 
-
-        System.out.println("labelDataDTO.getStartX() = " + labelDataDTO.getStartX());
         try {
             Coordinate coordinate = Coordinate.builder()
                     .image(image)
@@ -168,13 +166,10 @@ public class ImageService {
     public List<CoordinateDTO> getPositionAndCoordinateList(Long id , Boolean isWeb) {
         Optional<Image> image = imageRepository.findById(id);
         List<Coordinate> coordinateList = null;
-        System.out.println("image.isPresent() = " + image.get().getImageName());
-        System.out.println("isWeb = " + isWeb);
 
         if(image.isPresent()){
             if(isWeb){
                 coordinateList  = coordinateRepository.findAllByImageAndIsWebTrue(image.get());
-                System.out.println("coordinateList = " + coordinateList);
             }
             else{
                 coordinateList  = coordinateRepository.findAllByImageAndIsWebFalse(image.get());
@@ -286,11 +281,9 @@ public class ImageService {
         Optional<Coordinate> optionalCoordinate = coordinateRepository.findById(coordinateSettingDto.coordinateId());
   
         if (optionalCoordinate.isPresent()) {
-            System.out.println("coordinateSettingDto.setting() = " + coordinateSettingDto.setting());
+
             Coordinate coordinate = optionalCoordinate.get();
             String setting = coordinateSettingDto.setting();
-
-            System.out.println("setting = " + setting);
 
             CoordinateSetting coordinateSetting = mapSettingToEnum(setting);
             coordinate.updateSetting(coordinateSetting);

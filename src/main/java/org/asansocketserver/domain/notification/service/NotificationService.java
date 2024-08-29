@@ -35,7 +35,7 @@ public class NotificationService {
 
 
     public void createAndSaveNotification(Watch watch, Long imageId, String prediction, String alarmType) {
-        logCacheStatus();
+//        logCacheStatus();
         LocalDateTime now = LocalDateTime.now();
         String cacheKey = createCacheKey(watch.getId(), alarmType);
 
@@ -72,17 +72,17 @@ public class NotificationService {
     }
 
 
-    public void logCacheStatus() {
-        Cache cache = cacheManager.getCache("notifications");
-        if (cache != null && cache instanceof ConcurrentMapCache) {
-            ConcurrentMap<Object, Object> nativeCache = ((ConcurrentMapCache) cache).getNativeCache();
-
-            log.info("현재 캐시 상태:");
-            nativeCache.forEach((key, value) -> System.out.println("Key: {}, Value: {}" + key + value));
-        } else {
-            log.info("캐시가 존재하지 않거나 ConcurrentMapCache가 아닙니다.");
-        }
-    }
+//    public void logCacheStatus() {
+//        Cache cache = cacheManager.getCache("notifications");
+//        if (cache != null && cache instanceof ConcurrentMapCache) {
+//            ConcurrentMap<Object, Object> nativeCache = ((ConcurrentMapCache) cache).getNativeCache();
+//
+//            log.info("현재 캐시 상태:");
+//            nativeCache.forEach((key, value) -> System.out.println("Key: {}, Value: {}" + key + value));
+//        } else {
+//            log.info("캐시가 존재하지 않거나 ConcurrentMapCache가 아닙니다.");
+//        }
+//    }
 
 
     public List<NotificationResponseDto> getNotifications(int page, int size, String type, String watchName, String watchId, LocalDate startDate, LocalDate endDate , boolean sortAsc) {
@@ -94,9 +94,7 @@ public class NotificationService {
 
         if (startDate != null && endDate != null) {
             startOfDay = startDate.atStartOfDay();
-            System.out.println("startOfDay = " + startOfDay);
             endOfDay = endDate.atTime(LocalTime.MAX);
-            System.out.println("endOfDay = " + endOfDay);
         } else {
             LocalDate today = LocalDate.now();
             startOfDay = today.atStartOfDay();
@@ -185,9 +183,7 @@ public class NotificationService {
 
         if (startDate != null && endDate != null) {
             startOfDay = startDate.atStartOfDay();
-            System.out.println("startOfDay = " + startOfDay);
             endOfDay = endDate.atTime(LocalTime.MAX);
-            System.out.println("endOfDay = " + endOfDay);
         } else {
             LocalDate today = LocalDate.now();
             startOfDay = today.atStartOfDay();

@@ -25,7 +25,6 @@ public class ImageController {
     @GetMapping("/getImage/{id}")
     public ResponseEntity<SuccessResponse<?>> getImage(@PathVariable Long id) {
         ImageResponseDto responseDto = imageService.getImage(id);
-        System.out.println("responseDto = " + responseDto);
         return SuccessResponse.ok(responseDto);
     }
 
@@ -93,7 +92,6 @@ public class ImageController {
     @PostMapping("/saveImage")
     public ResponseEntity<SuccessResponse<?>> saveImage(@RequestParam("imageData") MultipartFile file) throws IOException {
         Long imageId = imageService.saveImage(file);
-        System.out.println("imageId = " + imageId);
         return SuccessResponse.ok(imageId);
     }
 
