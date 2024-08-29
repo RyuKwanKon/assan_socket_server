@@ -93,4 +93,28 @@ public class Watch {
         }
         this.highRisk = HighRisk.valueOf(requestDto.highRisk());
     }
+
+    public void updateWatchForTransfer(Watch sendWatch) {
+        this.name = sendWatch.getName();
+        this.host = sendWatch.getHost();
+        this.gender = sendWatch.getGender();
+        this.highRisk = sendWatch.getHighRisk();
+        this.minHR = sendWatch.getMinHR();
+        this.maxHR = sendWatch.getMaxHR();
+
+        // 기존 리스트를 지우고 sendWatch의 정보를 추가
+        this.prohibitedCoordinateList.clear();
+        for (WatchCoordinateProhibition prohibition : sendWatch.getProhibitedCoordinateList()) {
+            this.addProhibitedCoordinate(prohibition.getCoordinate());
+        }
+
+        for (WatchNoContact noContact : sendWatch.getNoContactWatchList()) {
+            this.addNoContactWatch(noContact.getNoContactWatch());
+        }
+    }
+
+    public void updateWatchNameForTransfer(String watchName) {
+        this.name = watchName;
+    }
+
 }

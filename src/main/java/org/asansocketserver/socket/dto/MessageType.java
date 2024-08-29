@@ -23,7 +23,8 @@ public enum MessageType {
     DIS_WATCH("DIS_WATCH"),
     CONTACTION("CONTACTION"),
     PROHIBITION("PROHIBITION"),
-    GENDER("GENDER");
+    GENDER("GENDER"),
+    TOTAL_PROHIBITION("TOTAL_PROHIBITION");
 
     private final String desc;
 }

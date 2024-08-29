@@ -7,6 +7,7 @@ import org.asansocketserver.domain.watch.dto.request.WatchUpdateRequestDto;
 import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchProhibitedCoordinatesUpdateRequestDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchTransferDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
 import org.asansocketserver.domain.watch.dto.web.response.*;
 import org.asansocketserver.domain.watch.service.WatchService;
@@ -89,6 +90,13 @@ public class WatchApiController {
     @GetMapping("/web/getNoContactAndProhibitedIdWithName/{watchId}")
     public ResponseEntity<SuccessResponse<?>> getNoContactAndProhibitedIdWithName(@PathVariable Long watchId)  {
         NoContactAndProhibitedIdWithNameDto responseDto = watchService.getNoContactAndProhibitedIdWithName(watchId);
+        return SuccessResponse.ok(responseDto);
+    }
+
+    @PostMapping("/web/transferWatchInfo")
+    public ResponseEntity<SuccessResponse<?>> transferWatchInfo(@RequestBody final WatchTransferDto requestDto) {
+
+        final WatchResponseForWebDto responseDto = watchService.transferWatchInfo(requestDto);
         return SuccessResponse.ok(responseDto);
     }
 

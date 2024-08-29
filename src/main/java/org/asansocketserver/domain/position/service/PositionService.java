@@ -195,14 +195,14 @@ public class PositionService {
 
                 } else {
                     for (BeaconDataDTO beaconData : posData.beaconData()) {
-                        System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+//                        System.out.println("Updating beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
                         uniqueBSSIDMap.updateBSSIDMap(beaconData.bssid(), String.valueOf(beaconData.rssi()));
                     }
                 }
             } finally {
-                System.out.println("Before copying to baseMap: " + uniqueBSSIDMap.getBSSIDMap());
+//                System.out.println("Before copying to baseMap: " + uniqueBSSIDMap.getBSSIDMap());
                 baseMap.copyFrom(uniqueBSSIDMap);
-                System.out.println("After copying to baseMap: " + baseMap.getBSSIDMap());
+//                System.out.println("After copying to baseMap: " + baseMap.getBSSIDMap());
 
                 prediction = "null";
                 if (!baseMap.getBSSIDMap().isEmpty()) {
@@ -215,7 +215,7 @@ public class PositionService {
                             .orElseThrow(() -> new NoSuchElementException("No coordinate found for the given prediction"))
                             .getImage()
                             .getId();
-                    System.out.println("imageId = " + imageId);
+
                 } catch (NoSuchElementException e) {
                     System.out.println("Image ID could not be retrieved: " + e.getMessage());
                     // 예외 발생 시 추가적인 로직을 여기에 작성
@@ -233,7 +233,7 @@ public class PositionService {
         watch.updateCurrentLocation(prediction);
         updatePositionData(watch.getId(), PositionData.of(prediction));
 
-        System.out.println("watchName : " +  watch.getName() + " prediction : " + prediction);
+//        System.out.println("watchName : " +  watch.getName() + " prediction : " + prediction);
         String color = "null";
 
         if(imageId != null){
@@ -251,7 +251,6 @@ public class PositionService {
         if (prohibitionColor != null && !prohibitionColor.isEmpty()) {
             color = prohibitionColor;
         }}
-
 
 
         return PositionResponseDto.of(watch.getId(), watch.getName(), imageId, color ,prediction);
@@ -284,6 +283,7 @@ public class PositionService {
                 sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.CONTACTION,
                         CheckContactionDto.of(watch.getId(), imageId, watch.getName(),watch.getHost(),contactedWatchName,prediction)));
 
+
                 notificationService.createAndSaveNotification(watch, imageId, prediction ,"CONTACTION");
                 return "yellow";
             }
@@ -300,7 +300,12 @@ public class PositionService {
             String genderRestriction = getGenderRestriction(coordinateSetting);
 
             if (genderRestriction != null && shouldSendAlert(String.valueOf(watch.getGender()), genderRestriction)) {
-                sendAlert(destination, watch, imageId, prediction);
+                if(genderRestriction.equals("금지")){
+                    sendTotalProhibitionAlert(destination, watch, imageId, prediction);
+                    return "purple";
+                }
+
+                sendGenderAlert(destination, watch, imageId, prediction);
                 return "yellow";
             }
         }
@@ -320,11 +325,24 @@ public class PositionService {
         }
     }
 
+
+
     private boolean shouldSendAlert(String watchGender, String genderRestriction) {
         return genderRestriction.equals("금지") || !watchGender.equalsIgnoreCase(genderRestriction);
     }
 
-    private void sendAlert(String destination, Watch watch, Long imageId, String prediction) {
+
+    private void sendTotalProhibitionAlert(String destination, Watch watch, Long imageId, String prediction) {
+        sendingOperations.convertAndSend(destination,
+                SocketBaseResponse.of(
+                        MessageType.TOTAL_PROHIBITION,
+                        CheckGenderDto.of(watch.getId(),imageId, watch.getName(),watch.getHost(), prediction)
+                )
+        );
+        notificationService.createAndSaveNotification(watch, imageId, prediction,"TOTAL-PROHIBITION");
+    }
+
+    private void sendGenderAlert(String destination, Watch watch, Long imageId, String prediction) {
         sendingOperations.convertAndSend(destination,
                 SocketBaseResponse.of(
                         MessageType.GENDER,
@@ -338,7 +356,7 @@ public class PositionService {
 
 
     private String sendUniqueBSSIDMapToFlask(UniqueBSSIDMap uniqueBSSIDMap) throws JSONException {
-        String flaskUrl = "http://127.0.0.1:5000/predict";
+        String flaskUrl = "http://192.168.37.213:5000/predict";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -362,15 +380,15 @@ public class PositionService {
     }
 
     private String addPosData(PosDataDTO posData, Long imageId,String position) {
-        System.out.println("posData = " + posData);
+
         if (posData.beaconData().isEmpty()){
 
             return null;
         }
 
-        for (BeaconDataDTO beaconData : posData.beaconData()) {
-            System.out.println("scaning beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
-        }
+//        for (BeaconDataDTO beaconData : posData.beaconData()) {
+//            System.out.println("scaning beaconData bssid = " + beaconData.bssid() + ", rssi = " + beaconData.rssi());
+//        }
 
         BeaconData beaconDataEntity = new BeaconData();
         beaconDataEntity.setImageId(imageId);

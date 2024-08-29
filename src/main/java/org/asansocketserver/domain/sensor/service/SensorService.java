@@ -34,6 +34,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -140,7 +144,7 @@ public class SensorService {
             sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.HIGH_HEART_RATE, CheckHeartRateDto.of(watchId, watch.get().getName(), watch.get().getHost(), imageId
                     , watch.get().getCurrentLocation(), "blue", heartRate.getValue())));
             notificationService.createAndSaveNotification(watch.get(), imageId, position,"HIGH-HEART-RATE");
-        } else if (watch.get().getMinHR() > heartRate.getValue()) {
+        } else if ( watch.get().getMinHR() > heartRate.getValue()) {
             sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.LOW_HEART_RATE, CheckHeartRateDto.of(watchId, watch.get().getName(), watch.get().getHost(), imageId,
                     watch.get().getCurrentLocation(), "red", heartRate.getValue())));
             notificationService.createAndSaveNotification(watch.get(), imageId, position,"LOW-HEART-RATE");
@@ -168,51 +172,56 @@ public class SensorService {
         ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream);
 
         int fileNumber = 1;
+        
 
-        for (int patientId : downloadRequestDto.patientId()) {
-            List<SensorData> sensorDataList = sensorDataRepository.findAllByWatchIdAndDateBetween(
-                    patientId, downloadRequestDto.startDate(), downloadRequestDto.lastDate().plusDays(1)
-            );
+        for (String patientName : downloadRequestDto.patientName()){
+            Optional<List<Watch>> watchList = Optional.ofNullable(watchRepository.findAllByName(patientName));
+            
+            for( Watch watch : watchList.get()){
+                List<SensorData> sensorDataList = sensorDataRepository.findAllByNameAndDateBetween(
+                        watch.getName(), downloadRequestDto.startDate().minusDays(1), downloadRequestDto.lastDate().plusDays(1)
+                );
 
-            List<SensorRow> allSensorRows = new ArrayList<>();
-            for (SensorData data : sensorDataList) {
-                allSensorRows.addAll(data.getSensorRowList());
-            }
-
-            // 타임스탬프 오름차순으로 정렬
-            allSensorRows.sort(Comparator.comparing(SensorRow::getTimestamp));
-
-            // 청크 단위로 CSV 파일 생성
-            for (int i = 0; i < allSensorRows.size(); i += chunkSize) {
-                int toIndex = Math.min(i + chunkSize, allSensorRows.size());
-
-                StringBuilder csvContent = new StringBuilder();
-                String bom = "\uFEFF"; // UTF-8 BOM 추가
-                csvContent.append(bom);
-                csvContent.append("timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ,barometerValue,heartRateValue,lightValue\n");
-
-                for (int j = i; j < toIndex; j++) {
-                    SensorRow row = allSensorRows.get(j);
-                    csvContent.append(row.getTimestamp()).append(",");
-                    csvContent.append(row.getAccX() != null ? row.getAccX() : "NAN").append(",");
-                    csvContent.append(row.getAccY() != null ? row.getAccY() : "NAN").append(",");
-                    csvContent.append(row.getAccZ() != null ? row.getAccZ() : "NAN").append(",");
-                    csvContent.append(row.getGyroX() != null ? row.getGyroX() : "NAN").append(",");
-                    csvContent.append(row.getGyroY() != null ? row.getGyroY() : "NAN").append(",");
-                    csvContent.append(row.getGyroZ() != null ? row.getGyroZ() : "NAN").append(",");
-                    csvContent.append(row.getBarometerValue() != null ? row.getBarometerValue() : "NAN").append(",");
-                    csvContent.append(row.getHeartRateValue() != null ? row.getHeartRateValue() : "NAN").append(",");
-                    csvContent.append(row.getLightValue() != null ? row.getLightValue() : "NAN").append("\n");
+                List<SensorRow> allSensorRows = new ArrayList<>();
+                for (SensorData data : sensorDataList) {
+                    allSensorRows.addAll(data.getSensorRowList());
                 }
 
-                String fileName = "sensorData_" + patientId + "_" + fileNumber + ".csv";
-                ZipEntry zipEntry = new ZipEntry(fileName);
-                zipOutputStream.putNextEntry(zipEntry);
-                zipOutputStream.write(csvContent.toString().getBytes(StandardCharsets.UTF_8));
-                zipOutputStream.closeEntry();
+                // 청크 단위로 CSV 파일 생성
+                for (int i = 0; i < allSensorRows.size(); i += chunkSize) {
+                    int toIndex = Math.min(i + chunkSize, allSensorRows.size());
 
-                fileNumber++;
-            }
+                    StringBuilder csvContent = new StringBuilder();
+                    String bom = "\uFEFF"; // UTF-8 BOM 추가
+                    csvContent.append(bom);
+                    csvContent.append("timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ,barometerValue,heartRateValue,lightValue\n");
+
+                    for (int j = i; j < toIndex; j++) {
+                        SensorRow row = allSensorRows.get(j);
+
+                        // 유닉스 밀리초를 LocalDateTime으로 변환
+
+                        csvContent.append(row.getTimestamp()).append(",");
+                        csvContent.append(row.getAccX() != null ? row.getAccX() : "NAN").append(",");
+                        csvContent.append(row.getAccY() != null ? row.getAccY() : "NAN").append(",");
+                        csvContent.append(row.getAccZ() != null ? row.getAccZ() : "NAN").append(",");
+                        csvContent.append(row.getGyroX() != null ? row.getGyroX() : "NAN").append(",");
+                        csvContent.append(row.getGyroY() != null ? row.getGyroY() : "NAN").append(",");
+                        csvContent.append(row.getGyroZ() != null ? row.getGyroZ() : "NAN").append(",");
+                        csvContent.append(row.getBarometerValue() != null ? row.getBarometerValue() : "NAN").append(",");
+                        csvContent.append(row.getHeartRateValue() != null ? row.getHeartRateValue() : "NAN").append(",");
+                        csvContent.append(row.getLightValue() != null ? row.getLightValue() : "NAN").append("\n");
+                    }
+
+                    String fileName = "sensorData_" +watch.getName() + "_" + watch.getId() + "_" + fileNumber + ".csv";
+                    ZipEntry zipEntry = new ZipEntry(fileName);
+                    zipOutputStream.putNextEntry(zipEntry);
+                    zipOutputStream.write(csvContent.toString().getBytes(StandardCharsets.UTF_8));
+                    zipOutputStream.closeEntry();
+
+                    fileNumber++;
+                     }
+                }
         }
 
         // ZIP 스트림을 마무리

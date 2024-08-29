@@ -64,10 +64,10 @@ public class StompInterceptor implements ChannelInterceptor  {
             Long watchId = getWatchByAuthorizationHeader(accessor);
             log.info(watchId.toString());
             setWatchIdFromStompHeader(accessor, watchId);
-
+            Optional<Watch> watch = watchRepository.findById(watchId);
             if (!watchId.equals(monitoringId)) {
                 createWatchLiveAndSave(watchId);
-                createSensorDataAndSave(watchId);
+                createSensorDataAndSave(watchId , watch.get().getName());
                 createPositionAndSave(watchId);
             }
             log.info("[CONNECT]:: watchId : " + watchId);
@@ -147,9 +147,9 @@ public class StompInterceptor implements ChannelInterceptor  {
         watchLiveRepository.save(watchLive);
     }
 
-    private void createSensorDataAndSave(Long watchId) {
+    private void createSensorDataAndSave(Long watchId ,String watchName) {
         if (sensorDataRepository.existsByWatchIdAndDate(watchId, LocalDate.now())) return;
-        SensorData sensorData = SensorData.createSensorData(watchId);
+        SensorData sensorData = SensorData.createSensorData(watchId, watchName);
         sensorDataRepository.save(sensorData);
     }
 
