@@ -2,6 +2,8 @@ package org.asansocketserver.domain.watch.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.asansocketserver.batch.cdc.entity.SensorData;
+import org.asansocketserver.batch.cdc.repository.SensorDataRepository;
 import org.asansocketserver.domain.image.dto.CoordinateIDAndPositionDTO;
 import org.asansocketserver.domain.image.dto.ImageIDAndPositionAndCoordinateDTO;
 import org.asansocketserver.domain.image.entity.Coordinate;
@@ -12,6 +14,7 @@ import org.asansocketserver.domain.watch.dto.response.WatchAllResponseDto;
 import org.asansocketserver.domain.watch.dto.response.WatchResponseDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchNoContactedRequestDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchProhibitedCoordinatesUpdateRequestDto;
+import org.asansocketserver.domain.watch.dto.web.request.WatchTransferDto;
 import org.asansocketserver.domain.watch.dto.web.request.WatchUpdateRequestForWebDto;
 
 import org.asansocketserver.domain.watch.dto.web.response.*;
@@ -29,10 +32,12 @@ import org.asansocketserver.global.error.exception.EntityNotFoundException;
 //import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.asansocketserver.socket.dto.MessageType;
 import org.asansocketserver.socket.dto.SocketBaseResponse;
+import org.bson.types.ObjectId;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,10 +53,24 @@ public class WatchService {
     private final SimpMessageSendingOperations sendingOperations;
     private final WatchNoContactRepository watchNoContactRepository;
     private final CoordinateRepository coordinateRepository;
+    private final SensorDataRepository sensorDataRepository;
 
     public WatchResponseDto updateWatchInfo(Long watchId, WatchUpdateRequestDto watchUpdateRequestDto) {
         Watch watch = findByWatchIdOrThrow(watchId);
         watch.updateWatch(watchUpdateRequestDto);
+
+        boolean isDuplicateName = watchRepository.existsByNameAndIdNot(watchUpdateRequestDto.name(), watchId);
+        if (isDuplicateName) {
+            throw new IllegalArgumentException("중복 이름이 존재합니다.");
+        }
+
+        Optional<SensorData> sensorData = sensorDataRepository.findByWatchIdAndDate(watch.getId(), LocalDate.now());
+
+        if (sensorData.isPresent()) {
+            sensorData.get().updatedWatchName(watchUpdateRequestDto.name());
+            sensorDataRepository.save(sensorData.get());
+        }
+
         return WatchResponseDto.of(watch);
     }
 
@@ -78,6 +97,8 @@ public class WatchService {
 
             watchRepository.delete(watch.get());
         }
+
+
 
         watchLive.ifPresent(watchLiveRepository::delete);
         sendingOperations.convertAndSend("/queue/sensor/9999999", SocketBaseResponse.of(MessageType.DEL_WATCH, id));
@@ -179,18 +200,31 @@ public class WatchService {
 
     public WatchResponseForWebDto updateWatchInfoForWeb(WatchUpdateRequestForWebDto watchUpdateRequestDto) {
         Long watchId = watchUpdateRequestDto.watchId();
+
+        boolean isDuplicateName = watchRepository.existsByNameAndIdNot(watchUpdateRequestDto.name(), watchId);
+        if (isDuplicateName) {
+            throw new IllegalArgumentException("중복 이름이 존재합니다.");
+        }
+
         List<Long> noContactWatchIds = watchUpdateRequestDto.noContactWatchIds();
         List<Long> prohibitedCoordinatesIds = watchUpdateRequestDto.prohibitedCoordinatesIds();
 
-        Watch watch = findByWatchIdOrThrow(watchUpdateRequestDto.watchId());
+        Watch watch = findByWatchIdOrThrow(watchId);
         watch.updateWatchForWeb(watchUpdateRequestDto);
 
-        updateNoContactWatchList(watchId,noContactWatchIds);
-        updateProhibitedCoordinateList(watchId,prohibitedCoordinatesIds);
+        Optional<SensorData> sensorData = sensorDataRepository.findByWatchIdAndDate(watchId, LocalDate.now());
+        if (sensorData.isPresent()) {
+            sensorData.get().updatedWatchName(watchUpdateRequestDto.name());
+            sensorDataRepository.save(sensorData.get());
+        }
+
+        updateNoContactWatchList(watchId, noContactWatchIds);
+        updateProhibitedCoordinateList(watchId, prohibitedCoordinatesIds);
 
         watchRepository.save(watch);
         return WatchResponseForWebDto.of(watch);
     }
+
 
 
 
@@ -265,4 +299,46 @@ public class WatchService {
 
 
     }
+
+    public WatchResponseForWebDto transferWatchInfo(WatchTransferDto requestDto) {
+        Watch sendWatch = findByWatchIdOrThrow(requestDto.sendInfoId());
+        Watch receiveWatch = findByWatchIdOrThrow(requestDto.receiveInfoId());
+
+        String sendWatchName = sendWatch.getName();
+
+        // 필요한 정보들을 이월
+        receiveWatch.updateWatchForTransfer(sendWatch);
+
+        watchNoContactRepository.deleteAllByWatch(sendWatch);
+        watchNoContactRepository.deleteAllByNoContactWatch(sendWatch);
+
+
+
+        // 업데이트된 receiveWatch 저장
+        watchRepository.save(receiveWatch);
+
+        // 이월 후 sendWatch 삭제
+        watchRepository.delete(sendWatch);
+
+        // 한국 시간(LocalDate.now())을 UTC로 변환하여 조회
+        LocalDateTime nowInKST = LocalDateTime.now();
+        ZonedDateTime utcDateTime = nowInKST.atZone(ZoneId.of("Asia/Seoul")).withZoneSameInstant(ZoneOffset.UTC);
+        LocalDate utcDate = utcDateTime.toLocalDate();
+
+        Optional<SensorData> sensorData = sensorDataRepository.findByWatchIdAndDate(requestDto.receiveInfoId(), utcDate);
+        if (sensorData.isPresent()) {
+            SensorData existingSensorData = sensorData.get();
+
+            if (existingSensorData.getId() == null) {
+                throw new IllegalStateException("SensorData _id is null. Cannot update without _id.");
+            }
+
+
+            existingSensorData.updatedWatchName(sendWatchName);
+            sensorDataRepository.save(existingSensorData);  // 업데이트된 엔티티를 저장
+        }
+
+        return WatchResponseForWebDto.of(receiveWatch);
+    }
+
 }
