@@ -125,11 +125,18 @@ public class ImageService {
                 new IllegalArgumentException("해당 이미지가 존재하지 않습니다")));
 
 
-        Coordinate existingCoordinate = coordinateRepository.findByImageAndPosition(image, labelDataDTO.getPosition());
+//        Coordinate existingCoordinate = coordinateRepository.findByImageAndPosition(image, labelDataDTO.getPosition());
+//
+//        if (existingCoordinate != null) {
+//            throw new IllegalArgumentException("해당 이미지의 위치가 이미 존재합니다.");
+//        }
 
-        if (existingCoordinate != null) {
-            throw new IllegalArgumentException("해당 이미지의 위치가 이미 존재합니다.");
-        }
+//        boolean isDuplicateName = coordinateRepository.findByPosition(labelDataDTO.getPosition());
+//        if (isDuplicateName) {
+//            throw new IllegalArgumentException("중복 이름의 위치가 존재합니다.");
+//        }
+
+
         System.out.println("labelDataDTO.getStartX() = " + labelDataDTO.getStartX());
         try {
             Coordinate coordinate = Coordinate.builder()
@@ -277,10 +284,13 @@ public class ImageService {
 
     public CoodinateSettingDto setCoordinateSetting(CoodinateSettingDto coordinateSettingDto) {
         Optional<Coordinate> optionalCoordinate = coordinateRepository.findById(coordinateSettingDto.coordinateId());
-
+  
         if (optionalCoordinate.isPresent()) {
+            System.out.println("coordinateSettingDto.setting() = " + coordinateSettingDto.setting());
             Coordinate coordinate = optionalCoordinate.get();
             String setting = coordinateSettingDto.setting();
+
+            System.out.println("setting = " + setting);
 
             CoordinateSetting coordinateSetting = mapSettingToEnum(setting);
             coordinate.updateSetting(coordinateSetting);

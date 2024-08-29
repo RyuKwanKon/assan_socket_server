@@ -238,6 +238,7 @@ public class PositionService {
 
         if(imageId != null){
         String genderColor = checkGender(destination, watch, imageId, prediction);
+            System.out.println("genderColor = " + genderColor);
         if (genderColor != null && !genderColor.isEmpty()) {
             color = genderColor;
         }
@@ -253,7 +254,7 @@ public class PositionService {
         }}
 
 
-
+        System.out.println("color = " + color);
         return PositionResponseDto.of(watch.getId(), watch.getName(), imageId, color ,prediction);
     }
 
@@ -284,6 +285,7 @@ public class PositionService {
                 sendingOperations.convertAndSend(destination, SocketBaseResponse.of(MessageType.CONTACTION,
                         CheckContactionDto.of(watch.getId(), imageId, watch.getName(),watch.getHost(),contactedWatchName,prediction)));
 
+
                 notificationService.createAndSaveNotification(watch, imageId, prediction ,"CONTACTION");
                 return "yellow";
             }
@@ -300,7 +302,12 @@ public class PositionService {
             String genderRestriction = getGenderRestriction(coordinateSetting);
 
             if (genderRestriction != null && shouldSendAlert(String.valueOf(watch.getGender()), genderRestriction)) {
-                sendAlert(destination, watch, imageId, prediction);
+                if(genderRestriction.equals("금지")){
+                    sendTotalProhibitionAlert(destination, watch, imageId, prediction);
+                    return "purple";
+                }
+
+                sendGenderAlert(destination, watch, imageId, prediction);
                 return "yellow";
             }
         }
@@ -320,11 +327,24 @@ public class PositionService {
         }
     }
 
+
+
     private boolean shouldSendAlert(String watchGender, String genderRestriction) {
         return genderRestriction.equals("금지") || !watchGender.equalsIgnoreCase(genderRestriction);
     }
 
-    private void sendAlert(String destination, Watch watch, Long imageId, String prediction) {
+
+    private void sendTotalProhibitionAlert(String destination, Watch watch, Long imageId, String prediction) {
+        sendingOperations.convertAndSend(destination,
+                SocketBaseResponse.of(
+                        MessageType.TOTAL_PROHIBITION,
+                        CheckGenderDto.of(watch.getId(),imageId, watch.getName(),watch.getHost(), prediction)
+                )
+        );
+        notificationService.createAndSaveNotification(watch, imageId, prediction,"TOTAL-PROHIBITION");
+    }
+
+    private void sendGenderAlert(String destination, Watch watch, Long imageId, String prediction) {
         sendingOperations.convertAndSend(destination,
                 SocketBaseResponse.of(
                         MessageType.GENDER,

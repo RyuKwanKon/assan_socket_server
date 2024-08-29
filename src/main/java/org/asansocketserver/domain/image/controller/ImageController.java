@@ -130,7 +130,7 @@ public class ImageController {
     }
 
     //이미지 좌표별 상태 설정
-    @PostMapping("web/setCoordinateSetting")
+    @PostMapping("/web/setCoordinateSetting")
     public ResponseEntity<SuccessResponse<?>> setCoordinateSetting(@RequestBody CoodinateSettingDto coordinateSettingDto) {
         CoodinateSettingDto responseDto = imageService.setCoordinateSetting(coordinateSettingDto);
         return SuccessResponse.ok(responseDto);
