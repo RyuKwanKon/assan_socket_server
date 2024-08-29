@@ -22,7 +22,7 @@ public class Notification {
     private String watchHost;
     private String position;
     private String alarmType;
-    private LocalDateTime timestamp; // 알림 발생 시간
+    private LocalDateTime timestamp;
 
     public static Notification createNotification(NotificationRequestDto notificationRequestDto) {
         return Notification.builder()

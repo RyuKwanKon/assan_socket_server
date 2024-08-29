@@ -8,10 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,12 +31,37 @@ public class NotificationController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String watchName,
             @RequestParam(required = false) String watchId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "false") boolean sortAsc
     ) {
-        List<NotificationResponseDto> notifications = notificationService.getNotifications(page, size, type, watchName, watchId, date, sortAsc);
+        List<NotificationResponseDto> notifications = notificationService.getNotifications(page, size, type, watchName, watchId, startDate,endDate, sortAsc);
         return SuccessResponse.ok(notifications);
     }
+
+
+    @PostMapping("/downloadNotifications")
+    public ResponseEntity<byte[]> getAllNotifications(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String watchName,
+            @RequestParam(required = false) String watchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "false") boolean sortAsc,
+            @RequestParam(defaultValue = "10000") int chunkSize
+
+    ) throws IOException {
+        List<NotificationResponseDto> notifications = notificationService.getNotificationsByDateForDownload(type, watchName, watchId, startDate,endDate,sortAsc);
+        byte[] zipBytes = notificationService.makeZipFile(notifications,chunkSize);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "notifications"+"-"+startDate+"-"+endDate);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(zipBytes);
+    }
+
 
 
     @GetMapping("/downloadNotificationsAsCsvZip")

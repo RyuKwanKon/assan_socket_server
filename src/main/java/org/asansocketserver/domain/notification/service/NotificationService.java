@@ -54,7 +54,7 @@ public class NotificationService {
                         watch.getHost(),
                         prediction,
                         alarmType,
-                        now.plusHours(9)
+                        now
                 );
 
                 Notification notification = Notification.createNotification(requestDto);
@@ -85,23 +85,24 @@ public class NotificationService {
     }
 
 
-    public List<NotificationResponseDto> getNotifications(int page, int size, String type, String watchName, String watchId, LocalDate date, boolean sortAsc) {
+    public List<NotificationResponseDto> getNotifications(int page, int size, String type, String watchName, String watchId, LocalDate startDate, LocalDate endDate , boolean sortAsc) {
         int skip = (page - 1) * size;
 
         // 지정된 날짜의 시작과 끝을 설정하거나, 날짜가 없으면 오늘 날짜를 사용
         LocalDateTime startOfDay;
         LocalDateTime endOfDay;
 
-        if (date != null) {
-            startOfDay = date.atStartOfDay();
-            endOfDay = date.atTime(LocalTime.MAX);
+        if (startDate != null && endDate != null) {
+            startOfDay = startDate.atStartOfDay();
+            System.out.println("startOfDay = " + startOfDay);
+            endOfDay = endDate.atTime(LocalTime.MAX);
+            System.out.println("endOfDay = " + endOfDay);
         } else {
             LocalDate today = LocalDate.now();
             startOfDay = today.atStartOfDay();
             endOfDay = today.atTime(LocalTime.MAX);
         }
 
-        // 필터링 및 정렬 조건 적용
         List<Notification> filteredNotifications = notificationMongoRepository.findAll().stream()
                 .filter(notification -> type == null || notification.getAlarmType().equals(type))
                 .filter(notification -> watchName == null || notification.getWatchName().equals(watchName))
@@ -134,13 +135,6 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-
-
-    public long countNotificationsByDate(LocalDate date) {
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
-        return notificationMongoRepository.countByTimestamp(startOfDay, endOfDay);
-    }
 
 
     public byte[] makeZipFile(List<NotificationResponseDto> notifications, int chunkSize) throws IOException {
@@ -182,5 +176,38 @@ public class NotificationService {
         zipOutputStream.close();
 
         return byteArrayOutputStream.toByteArray();
+    }
+
+    public List<NotificationResponseDto> getNotificationsByDateForDownload(String type, String watchName, String watchId, LocalDate startDate, LocalDate endDate,boolean sortAsc) {
+
+        LocalDateTime startOfDay;
+        LocalDateTime endOfDay;
+
+        if (startDate != null && endDate != null) {
+            startOfDay = startDate.atStartOfDay();
+            System.out.println("startOfDay = " + startOfDay);
+            endOfDay = endDate.atTime(LocalTime.MAX);
+            System.out.println("endOfDay = " + endOfDay);
+        } else {
+            LocalDate today = LocalDate.now();
+            startOfDay = today.atStartOfDay();
+            endOfDay = today.atTime(LocalTime.MAX);
+        }
+
+        List<Notification> filteredNotifications = notificationMongoRepository.findAll().stream()
+                .filter(notification -> type == null || notification.getAlarmType().equals(type))
+                .filter(notification -> watchName == null || notification.getWatchName().equals(watchName))
+                .filter(notification -> watchId == null || notification.getWatchId().toString().equals(watchId))
+                .filter(notification -> !notification.getTimestamp().isBefore(startOfDay) && !notification.getTimestamp().isAfter(endOfDay))
+                .sorted((n1, n2) -> {
+                    int comparison = n1.getTimestamp().compareTo(n2.getTimestamp());
+                    return sortAsc ? comparison : -comparison;
+                })
+                .collect(Collectors.toList());
+
+        return filteredNotifications.stream()
+                .map(NotificationResponseDto::fromEntity)
+                .collect(Collectors.toList());
+
     }
 }
